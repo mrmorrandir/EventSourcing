@@ -13,6 +13,7 @@
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
