@@ -15,12 +15,11 @@ public class EventStore : IEventStore
 
     public async Task<IEnumerable<IEventData>> GetAsync(Guid streamId, CancellationToken cancellationToken = default)
     {
-
         try
         {
-            if (!await _eventStoreDbContext.Events.AnyAsync(e => e.StreamId == streamId, cancellationToken))
+            if (!await _eventStoreDbContext.Events.AsNoTracking().AnyAsync(e => e.StreamId == streamId, cancellationToken))
                 throw new EventStoreException($"Stream with id {streamId} not found");
-            var events = await _eventStoreDbContext.Events
+            var events = await _eventStoreDbContext.Events.AsNoTracking()
                 .Where(e => e.StreamId == streamId)
                 .OrderBy(e => e.Version)
                 .ToListAsync(cancellationToken);
@@ -41,7 +40,7 @@ public class EventStore : IEventStore
     {
         try
         {
-            if (await _eventStoreDbContext.Events.AnyAsync(e => e.StreamId == streamId && e.Version > expectedVersion, cancellationToken))
+            if (await _eventStoreDbContext.Events.AsNoTracking().AnyAsync(e => e.StreamId == streamId && e.Version > expectedVersion, cancellationToken))
                 throw new EventStoreException($"Stream with id {streamId} has been modified - expected version {expectedVersion} but found higher version");
 
             var eventEntities = events.Select(e => new EventData

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Abstractions"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.FunctionTests", "tests\EventSourcing.FunctionTests\EventSourcing.FunctionTests.csproj", "{E7AF2ABD-CCDD-4722-B419-B964C8D4A0F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Benchmarks", "tests\EventSourcing.Benchmarks\EventSourcing.Benchmarks.csproj", "{51C111D5-F16B-44A9-AAF7-D3D78E947351}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,7 @@ Global
 		{7AE166D4-DC27-4D8E-9DD2-D5A48D77D822} = {67DD84CE-514A-46BA-B3DA-DF94C2844C76}
 		{5563D4FD-308D-40C1-8A3A-E9DAA7153FD4} = {67DD84CE-514A-46BA-B3DA-DF94C2844C76}
 		{E7AF2ABD-CCDD-4722-B419-B964C8D4A0F2} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
+		{51C111D5-F16B-44A9-AAF7-D3D78E947351} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7AE166D4-DC27-4D8E-9DD2-D5A48D77D822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,5 +36,9 @@ Global
 		{E7AF2ABD-CCDD-4722-B419-B964C8D4A0F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7AF2ABD-CCDD-4722-B419-B964C8D4A0F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7AF2ABD-CCDD-4722-B419-B964C8D4A0F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51C111D5-F16B-44A9-AAF7-D3D78E947351}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51C111D5-F16B-44A9-AAF7-D3D78E947351}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51C111D5-F16B-44A9-AAF7-D3D78E947351}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51C111D5-F16B-44A9-AAF7-D3D78E947351}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

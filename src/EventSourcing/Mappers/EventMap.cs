@@ -11,11 +11,11 @@ public class EventMap<TEvent> : IEventMap<TEvent> where TEvent : IEvent
     private static readonly JsonSerializerOptions options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true,
         Converters = { new JsonStringEnumConverter() }
     };
+    //private static readonly JsonSerializerOptions options = JsonSerializerOptions.Default;
 
-    public TEvent Map(string data)
+    public TEvent Map(string type, string data)
     {
         try
         {
@@ -27,20 +27,6 @@ public class EventMap<TEvent> : IEventMap<TEvent> where TEvent : IEvent
         }
     }
 
-    public bool TryMap(string data, out TEvent @event)
-    {
-        try
-        {
-            @event = Map(data);
-            return true;
-        }
-        catch (Exception)
-        {
-            @event = default!;
-            return false;
-        }
-    }
-    
     public string Map(TEvent @event)
     {
         try
@@ -50,20 +36,6 @@ public class EventMap<TEvent> : IEventMap<TEvent> where TEvent : IEvent
         catch (Exception e)
         {
             throw new EventMapperException($"Failed to map event of type {typeof(TEvent).Name} to data", e);
-        }
-    }
-    
-    public bool TryMap(TEvent @event, out string data)
-    {
-        try
-        {
-            data = Map(@event);
-            return true;
-        }
-        catch (Exception)
-        {
-            data = default!;
-            return false;
         }
     }
 }

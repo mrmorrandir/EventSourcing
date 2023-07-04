@@ -53,7 +53,7 @@ public class EventRepository : IEventRepository
     
     public async Task<Result> SaveAsync<TAggregate>(TAggregate aggregate, CancellationToken cancellationToken = default) where TAggregate : IAggregateRoot
     {
-        var changes = aggregate.GetChanges().ToArray();
+        var changes = aggregate.GetChanges();
         if (!changes.Any()) return Result.Ok();
         
         var eventStoreEvents = new List<EventData>();

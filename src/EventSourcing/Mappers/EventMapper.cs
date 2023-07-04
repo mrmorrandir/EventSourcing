@@ -5,19 +5,20 @@ namespace EventSourcing.Mappers;
 public class EventMapper : IEventMapper
 {
     private readonly Dictionary<string, Type> _eventTypes = new Dictionary<string, Type>();
-    private readonly Dictionary<Type, Func<string, IEvent>> _deserializationMaps = new();
+    private readonly Dictionary<Type, Func<string, string, IEvent>> _deserializationMaps = new();
     private readonly Dictionary<Type, Func<IEvent, string>> _serializationMaps = new();
 
     public void Register<TEvent>(string type, IEventMap<TEvent> eventMap) where TEvent : IEvent
     {
         if (type is null) throw new ArgumentNullException(nameof(type));
         if (eventMap is null) throw new ArgumentNullException(nameof(eventMap));
+        // TODO: Maybe split Registration for serialization and deserialization
         if (_serializationMaps.ContainsKey(typeof(TEvent))) throw new ArgumentException($"Map for type {type} already registered");
         if (_deserializationMaps.ContainsKey(typeof(TEvent))) throw new ArgumentException($"Map for type {typeof(TEvent)} already registered");
         
         _eventTypes.Add(type, typeof(TEvent));
         _serializationMaps.Add(typeof(TEvent), @event => eventMap.Map((TEvent)@event));
-        _deserializationMaps.Add(typeof(TEvent), s => eventMap.Map(s));
+        _deserializationMaps.Add(typeof(TEvent), (t, d) => eventMap.Map(t, d));
     }
 
     public void Register<TEvent>(string type) where TEvent : IEvent
@@ -40,17 +41,17 @@ public class EventMapper : IEventMapper
     {
         if (data is null) throw new ArgumentNullException(nameof(data));
         if (type is null) throw new ArgumentNullException(nameof(type));
-        if (!_eventTypes.ContainsKey(type)) throw new ArgumentException($"Map for type {type} not registered");
-        if (!_deserializationMaps.ContainsKey(_eventTypes[type])) throw new ArgumentException($"Map for type {_eventTypes[type]} not registered");
+        if (!_eventTypes.ContainsKey(type)) throw new InvalidOperationException($"Map for type {type} not registered");
+        if (!_deserializationMaps.ContainsKey(_eventTypes[type])) throw new InvalidOperationException($"Map for type {_eventTypes[type]} not registered");
         
-        return _deserializationMaps[_eventTypes[type]](data);
+        return _deserializationMaps[_eventTypes[type]](type, data);
     }
    
     public string Map(IEvent @event)
     {
         if (@event is null) throw new ArgumentNullException(nameof(@event));
         var type = @event.GetType();
-        if (!_serializationMaps.ContainsKey(type)) throw new ArgumentException($"Map for type {type} not registered");
+        if (!_serializationMaps.ContainsKey(type)) throw new InvalidOperationException($"Map for type {type} not registered");
         
         return _serializationMaps[type](@event);
     }

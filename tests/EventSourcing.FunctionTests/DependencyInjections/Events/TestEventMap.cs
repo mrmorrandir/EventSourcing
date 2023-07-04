@@ -4,7 +4,7 @@ namespace EventSourcing.FunctionTests.DependencyInjections.Events;
 
 public class TestEventMap : IEventMap<TestEvent1>
 {
-    public TestEvent1 Map(string data)
+    public TestEvent1 Map(string type, string data)
     {
         return new TestEvent1();
     }
