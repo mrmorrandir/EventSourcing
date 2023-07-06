@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
-using EventSourcing;
 using EventSourcing.Abstractions.Repositories;
 using EventSourcing.Abstractions.Stores;
-using EventSourcing.Benchmarks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
+namespace EventSourcing.Benchmarks;
 
 [MemoryDiagnoser()]
 public class MyBenchmarks
