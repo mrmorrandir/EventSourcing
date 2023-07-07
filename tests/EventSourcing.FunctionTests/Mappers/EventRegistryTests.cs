@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
 using EventSourcing.Abstractions.Mappers;
-using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -16,7 +15,7 @@ public class EventRegistryTests
     public void DependencyInjection_ShouldRegisterAbstractEventMappersInAssembly()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
 
         services.Should().ContainSingle(s => s.ImplementationType == typeof(MagicEventMapper));
         
@@ -30,7 +29,7 @@ public class EventRegistryTests
     public void SerializeAndDeserialize_ShouldSucceed_ForNewestVersion()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
@@ -38,7 +37,7 @@ public class EventRegistryTests
         var serialized = registry.Serialize(magicEvent);
         
         serialized.Type.Should().Be("magic-event-v3");
-        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.Id + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":\"" + magicEvent.Created.ToString("O") + "\"}");
+        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.Id + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
         
         var deserialized = (MagicEvent)registry.Deserialize(serialized.Type, serialized.Data);
         
@@ -51,7 +50,8 @@ public class EventRegistryTests
     public void Deserialize_ShouldSucceed_ForOldVersion2()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEventV2 = new MagicEventMapper.MagicEventV2(Guid.NewGuid(), "Magic", DateTime.UtcNow);
@@ -69,7 +69,7 @@ public class EventRegistryTests
     public void Deserialize_ShouldSucceed_ForOldVersion1()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEventV1 = new MagicEventMapper.MagicEventV1(Guid.NewGuid(), DateTime.UtcNow);
@@ -87,13 +87,26 @@ public class EventRegistryTests
     public void Deserialize_ShouldThrowException_WhenMapperNotFound()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
         var serialized = JsonSerializer.Serialize(magicEvent, EventSerializerOptions.Default);
 
         var func = () => (MagicEvent) registry.Deserialize("magic-event-vUNKOWN", serialized);
+
+        func.Should().Throw<EventRegistryException>().WithMessage("*not found*");
+    }
+    
+    [Fact]
+    public void Serialize_ShouldThrowException_WhenMapperNotFound()
+    {
+        var services = new ServiceCollection();
+        services.AddEventMappers(config => config.AddCustomMapper<MagicEventMapper>());
+        var serviceProvider = services.BuildServiceProvider();
+        var registry = serviceProvider.GetRequiredService<IEventRegistry>();
+
+        var func = () => (MagicEvent)registry.Serialize(new UnknownEvent(Guid.NewGuid(), "This should be unknown"));
 
         func.Should().Throw<EventRegistryException>().WithMessage("*not found*");
     }

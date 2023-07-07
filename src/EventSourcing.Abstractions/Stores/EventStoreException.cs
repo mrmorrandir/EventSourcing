@@ -2,10 +2,6 @@
 
 public class EventStoreException : Exception
 {
-    public EventStoreException()
-    {
-    }
-
     public EventStoreException(string message) : base(message)
     {
     }
