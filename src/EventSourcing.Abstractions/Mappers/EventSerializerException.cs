@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Mappers;
+﻿namespace EventSourcing.Abstractions.Mappers;
 
 public class EventSerializerException : Exception
 {

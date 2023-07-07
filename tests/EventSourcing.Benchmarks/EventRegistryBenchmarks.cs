@@ -1,5 +1,7 @@
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
+using EventSourcing.Abstractions.Mappers;
+using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +15,7 @@ public class EventRegistryBenchmarks
     public EventRegistryBenchmarks()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(Assembly.GetExecutingAssembly());
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
         var serviceProvider = services.BuildServiceProvider();
         _registry = (EventRegistry)serviceProvider.GetRequiredService<IEventRegistry>();
     }

@@ -10,10 +10,10 @@ namespace EventSourcing.Repositories;
 public class EventRepository : IEventRepository
 {
     private readonly IEventStore _eventStore;
-    private readonly IEventMapper _eventMapper;
+    private readonly IEventRegistry _eventMapper;
     private readonly IEventBus _eventBus;
 
-    public EventRepository(IEventStore eventStore, IEventMapper eventMapper, IEventBus eventBus)
+    public EventRepository(IEventStore eventStore, IEventRegistry eventMapper, IEventBus eventBus)
     {
         _eventStore = eventStore;
         _eventMapper = eventMapper;
@@ -37,7 +37,7 @@ public class EventRepository : IEventRepository
         {
             try
             {
-                var @event = _eventMapper.Map(eventData.Type, eventData.Data);
+                var @event = _eventMapper.Deserialize(eventData.Type, eventData.Data);
                 eventHistory.Add(@event);
             }
             catch (Exception ex)
@@ -64,16 +64,15 @@ public class EventRepository : IEventRepository
         {
             foreach (var change in changes)
             {
-                var data = _eventMapper.Map(change.Event);
-                var type = _eventMapper.GetTypeName(change.Event);
+                var serializedEvent = _eventMapper.Serialize(change.Event);
                 var eventData = new EventData
                 {
                     Id = Guid.NewGuid(),
                     Created = DateTime.Now,
                     StreamId = aggregate.Id,
                     Version = change.ExpectedVersion + 1,
-                    Type = type,
-                    Data = data
+                    Type = serializedEvent.Type,
+                    Data = serializedEvent.Data
                 };
 
                 eventStoreEvents.Add(eventData);

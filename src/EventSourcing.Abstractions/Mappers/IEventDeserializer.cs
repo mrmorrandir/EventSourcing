@@ -1,6 +1,4 @@
-﻿using EventSourcing.Abstractions;
-
-namespace EventSourcing.Mappers;
+﻿namespace EventSourcing.Abstractions.Mappers;
 
 public interface IEventDeserializer<TEvent> where TEvent : IEvent
 {

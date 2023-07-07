@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using EventSourcing.Abstractions;
+using EventSourcing.Abstractions.Mappers;
 
 namespace EventSourcing.Mappers;
 

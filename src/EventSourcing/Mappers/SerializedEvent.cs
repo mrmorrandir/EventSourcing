@@ -1,3 +1,5 @@
+using EventSourcing.Abstractions.Mappers;
+
 namespace EventSourcing.Mappers;
 
 public class SerializedEvent : ISerializedEvent

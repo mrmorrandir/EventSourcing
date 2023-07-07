@@ -1,6 +1,4 @@
-using System.Text.Json.Serialization;
 using EventSourcing.Abstractions;
-using EventSourcing.FunctionTests.Mappers.Events;
 
 namespace EventSourcing.FunctionTests.Mappers;
 

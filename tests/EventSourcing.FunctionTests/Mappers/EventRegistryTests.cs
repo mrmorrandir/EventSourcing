@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using EventSourcing.Abstractions.Mappers;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,57 +10,27 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace EventSourcing.FunctionTests.Mappers;
 
-public class AbstractEventMapperTests
+public class EventRegistryTests
 {
     [Fact]
-    public void ShouldWork()
-    {
-        var magicEventMapper = new MagicEventMapper();
-        var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
-
-        var data = magicEventMapper.Serialize(magicEvent);
-        
-        var deserializedMagicEvent = magicEventMapper.Deserialize(data.Type, data.Data);
-        
-        deserializedMagicEvent.Id.Should().Be(magicEvent.Id);
-        deserializedMagicEvent.Magic.Should().Be(magicEvent.Magic);
-        deserializedMagicEvent.Created.Should().Be(magicEvent.Created);
-    }   
-    
-    [Fact]
-    public void ShouldWork2()
-    {
-        var magicEventMapper = new MagicEventMapper();
-        var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
-        
-        var data = "{ \"id\": \"" + magicEvent.Id + "\", \"magicSpell\": \"" + magicEvent.Magic + "\", \"created\": " + JsonConvert.SerializeObject(magicEvent.Created) + " }";
-        
-        var deserializedMagicEvent = magicEventMapper.Deserialize("magic-event-v2", data);
-        
-        deserializedMagicEvent.Id.Should().Be(magicEvent.Id);
-        deserializedMagicEvent.Magic.Should().Be(magicEvent.Magic);
-        deserializedMagicEvent.Created.Should().Be(magicEvent.Created);
-    }
-
-    [Fact]
-    public void TestDi()
+    public void DependencyInjection_ShouldRegisterAbstractEventMappersInAssembly()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(Assembly.GetExecutingAssembly());
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
 
         services.Should().ContainSingle(s => s.ImplementationType == typeof(MagicEventMapper));
         
         var serviceProvider = services.BuildServiceProvider();
 
-        var mappers = serviceProvider.GetServices<IEventMapperX>();
+        var mappers = serviceProvider.GetServices<IEventMapper>();
         mappers.Should().ContainSingle(s => s.GetType() == typeof(MagicEventMapper));
     }
 
     [Fact]
-    public void ShouldWork3()
+    public void SerializeAndDeserialize_ShouldSucceed_ForNewestVersion()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(Assembly.GetExecutingAssembly());
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
@@ -77,10 +48,10 @@ public class AbstractEventMapperTests
     }
     
     [Fact]
-    public void ShouldWork4()
+    public void Deserialize_ShouldSucceed_ForOldVersion2()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(Assembly.GetExecutingAssembly());
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEventV2 = new MagicEventMapper.MagicEventV2(Guid.NewGuid(), "Magic", DateTime.UtcNow);
@@ -95,10 +66,10 @@ public class AbstractEventMapperTests
     }
     
     [Fact]
-    public void ShouldWork5()
+    public void Deserialize_ShouldSucceed_ForOldVersion1()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(Assembly.GetExecutingAssembly());
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
         var magicEventV1 = new MagicEventMapper.MagicEventV1(Guid.NewGuid(), DateTime.UtcNow);
@@ -110,5 +81,20 @@ public class AbstractEventMapperTests
         deserialized.Id.Should().Be(magicEventV1.Id);
         deserialized.Magic.Should().BeEmpty();
         deserialized.Created.Should().Be(magicEventV1.Created);
+    }
+
+    [Fact]
+    public void Deserialize_ShouldThrowException_WhenMapperNotFound()
+    {
+        var services = new ServiceCollection();
+        services.AddEventMappers(config => config.AddAssembly(Assembly.GetExecutingAssembly()));
+        var serviceProvider = services.BuildServiceProvider();
+        var registry = serviceProvider.GetRequiredService<IEventRegistry>();
+        var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
+        var serialized = JsonSerializer.Serialize(magicEvent, EventSerializerOptions.Default);
+
+        var func = () => (MagicEvent) registry.Deserialize("magic-event-vUNKOWN", serialized);
+
+        func.Should().Throw<EventRegistryException>().WithMessage("*not found*");
     }
 }

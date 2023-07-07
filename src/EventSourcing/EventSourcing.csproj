@@ -17,6 +17,8 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
+        <PackageVersion>1.0.0-beta-3</PackageVersion>
+        <PackageReleaseNotes>Breaking Changes - New Mapper Logic</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

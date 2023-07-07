@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
 using EventSourcing.Abstractions;
+using EventSourcing.Abstractions.Mappers;
 
 namespace EventSourcing.Mappers;
 
-public abstract class AbstractEventMapper<TEvent> : IEventMapperX<TEvent> where TEvent : IEvent
+public abstract class AbstractEventMapper<TEvent> : IEventMapper<TEvent> where TEvent : IEvent
 {
     private readonly List<string> _types = new();
     private readonly Dictionary<string, IEventDeserializer<TEvent>> _deserializers = new();

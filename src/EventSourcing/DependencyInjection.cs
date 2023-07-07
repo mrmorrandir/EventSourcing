@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using EventSourcing;
 using EventSourcing.Abstractions;
 using EventSourcing.Abstractions.Mappers;
 using EventSourcing.Abstractions.Projections;
@@ -9,9 +10,9 @@ using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace EventSourcing;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjection
 {
@@ -20,9 +21,8 @@ public static class DependencyInjection
         services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(opt => options?.Invoke(opt));
         services.AddScoped<IEventStore, EventStore>();
         services.AddScoped<IEventRepository, EventRepository>();
-        services.AddSingleton<IEventMapper, EventMapper>();
+        
         services.AddTransient<IEventBus, EventBus>();
-
         return services;
     }
 
@@ -43,10 +43,39 @@ public static class DependencyInjection
         return services;
     }
     
-    public static IServiceProvider AddEventMappings(this IServiceProvider serviceProvider, Action<IEventMapper> configure)
+    public static IServiceCollection AddEventMappers(this IServiceCollection services, Action<EventMapperConfig> configFunc)
     {
-        var mapper = serviceProvider.GetRequiredService<IEventMapper>();
-        configure(mapper);
-        return serviceProvider;
+        var configuration = new EventMapperConfig();
+        configFunc(configuration);
+
+        foreach (var assembly in configuration.AssembliesToRegister)
+            services.AddEventMappersForAssembly(assembly);
+        
+        services.AddScoped<IEventRegistry, EventRegistry>();
+        return services;
+    }
+
+    private static IServiceCollection AddEventMappersForAssembly(this IServiceCollection services, Assembly assembly)
+    {
+        // Get all classes that implement the IEventMapper<TEvent> interface
+        var eventMappers = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventMapper<>)))
+            .ToList();
+        foreach (var eventMapper in eventMappers)
+            services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), eventMapper));
+        return services;
+    }
+
+}
+
+public class EventMapperConfig
+{
+    internal List<Assembly> AssembliesToRegister { get; }= new();
+
+    public EventMapperConfig AddAssembly(Assembly assembly)
+    {
+        AssembliesToRegister.Add(assembly);
+        return this;
     }
 }

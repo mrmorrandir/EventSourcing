@@ -1,16 +1,14 @@
-namespace EventSourcing.Abstractions.Mappers;
+﻿namespace EventSourcing.Abstractions.Mappers;
 
-public interface IEventRegistration
+public interface IEventMapper
 {
-    void Register<TEvent>(string type, IEventMap<TEvent> eventMap) where TEvent : IEvent;
-    void Register<TEvent>(string type) where TEvent : IEvent;
+    IEnumerable<string> Types { get; }
+    Type EventType { get; }
 }
 
-public interface IEventMapper : IEventRegistration
+public interface IEventMapper<TEvent> : IEventMapper where TEvent: IEvent
 {
-    string GetTypeName(IEvent @event);
+    ISerializedEvent Serialize(TEvent @event);
     
-    IEvent Map(string type, string data);
-    
-    string Map(IEvent @event);
+    TEvent Deserialize(string type, string data);
 }
