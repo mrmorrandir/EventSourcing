@@ -18,6 +18,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.FunctionTests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.FunctionTests.DI.InvalidAssembly", "tests\EventSourcing.FunctionTests.DI.InvalidAssembly\EventSourcing.FunctionTests.DI.InvalidAssembly.csproj", "{B1BE8C85-A24A-4876-9F6C-509F9CE4B51F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Publishers.RabbitMQ", "src\EventSourcing.Publishers.RabbitMQ\EventSourcing.Publishers.RabbitMQ.csproj", "{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Publishers", "src\EventSourcing.Publishers\EventSourcing.Publishers.csproj", "{DDA30961-3C7A-43B8-AC46-E6164935F618}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Publishers.RabbitMQ.IntegrationTests", "tests\EventSourcing.Publishers.RabbitMQ.IntegrationTests\EventSourcing.Publishers.RabbitMQ.IntegrationTests.csproj", "{29582D17-209B-4991-9642-4C94CDDD7AF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +37,9 @@ Global
 		{7ABFA831-345F-4707-A1F6-79A7E7C6305C} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 		{8525BD13-3CF2-4D1B-B16B-C19A9E0A152D} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 		{B1BE8C85-A24A-4876-9F6C-509F9CE4B51F} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
+		{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D} = {67DD84CE-514A-46BA-B3DA-DF94C2844C76}
+		{DDA30961-3C7A-43B8-AC46-E6164935F618} = {67DD84CE-514A-46BA-B3DA-DF94C2844C76}
+		{29582D17-209B-4991-9642-4C94CDDD7AF6} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7AE166D4-DC27-4D8E-9DD2-D5A48D77D822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -61,5 +70,17 @@ Global
 		{B1BE8C85-A24A-4876-9F6C-509F9CE4B51F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1BE8C85-A24A-4876-9F6C-509F9CE4B51F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1BE8C85-A24A-4876-9F6C-509F9CE4B51F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB9A6E53-24F6-4A19-AC1F-0EC92A193B4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDA30961-3C7A-43B8-AC46-E6164935F618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDA30961-3C7A-43B8-AC46-E6164935F618}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDA30961-3C7A-43B8-AC46-E6164935F618}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDA30961-3C7A-43B8-AC46-E6164935F618}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29582D17-209B-4991-9642-4C94CDDD7AF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29582D17-209B-4991-9642-4C94CDDD7AF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29582D17-209B-4991-9642-4C94CDDD7AF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29582D17-209B-4991-9642-4C94CDDD7AF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

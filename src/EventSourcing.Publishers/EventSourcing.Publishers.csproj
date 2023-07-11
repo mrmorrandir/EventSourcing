@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Version>1.0.0-beta001</Version>
+        <Title>EventSourcing.Publishers</Title>
+        <Authors>Andreas Naumann</Authors>
+        <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>
+        <Copyright>2023 @ Andreas Naumann</Copyright>
+        <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>EventSourcing, Events, EventStore</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>
