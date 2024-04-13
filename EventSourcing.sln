@@ -24,6 +24,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Publishers", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Publishers.RabbitMQ.IntegrationTests", "tests\EventSourcing.Publishers.RabbitMQ.IntegrationTests\EventSourcing.Publishers.RabbitMQ.IntegrationTests.csproj", "{29582D17-209B-4991-9642-4C94CDDD7AF6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6BC8499B-6B1A-4DBF-B864-F271A8186851}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		.github\workflows\build-and-test-pull-request.yml = .github\workflows\build-and-test-pull-request.yml
+		.github\workflows\publish-packages-from-main.yml = .github\workflows\publish-packages-from-main.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
