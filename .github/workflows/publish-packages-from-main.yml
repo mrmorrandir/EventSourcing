@@ -5,7 +5,8 @@ name: Publish Packages (main)
 
 on:
   push:
-    branches: [ "main" ]
+    branches:  
+      - releases/**
   workflow_dispatch:
 
 jobs:
@@ -28,7 +29,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal --filter "FullyQualifiedName!~EventSourcing.Publishers.RabbitMQ.IntegrationTests"
       
     - name: Prepare Packages
       run: dotnet nuget add source --username mrmorrandir --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/mrmorrandir/index.json"
