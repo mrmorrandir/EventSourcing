@@ -1,14 +1,15 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using EventSourcing.Abstractions;
 using EventSourcing.Abstractions.Mappers;
 
 namespace EventSourcing.Mappers;
 
-public abstract class AbstractEventMapper<TEvent> : IEventMapper<TEvent> where TEvent : IEvent
+public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TEvent> where TEvent : IEvent
 {
     private readonly List<string> _types = new();
     private readonly Dictionary<string, IEventDeserializer<TEvent>> _deserializers = new();
-    private IEventSerializer<TEvent> _serializer;
+    private IEventSerializer<TEvent> _serializer = null!;
 
     public IEnumerable<string> Types => _types;
     public Type EventType => typeof(TEvent);
@@ -31,6 +32,10 @@ public abstract class AbstractEventMapper<TEvent> : IEventMapper<TEvent> where T
 
     /// <summary>
     /// Configures a serializer for the specified type. Only one serializer can be registered per instance.
+    /// <para>
+    /// The type name should be in kebab case with a version number in the end. For example: <c>my-event-v1</c>.
+    /// This is to ensure that the type name is unique and can be used to identify the event type. It also makes it easier to support versioning of events.
+    /// </para>
     /// </summary>
     /// <param name="serializer">The serializer to be used</param>
     /// <exception cref="InvalidOperationException">When serializer is already registered</exception>
@@ -38,6 +43,8 @@ public abstract class AbstractEventMapper<TEvent> : IEventMapper<TEvent> where T
     {
         if (_serializer != null)
             throw new InvalidOperationException($"Serializer for type {serializer.Type} already registered");
+        if (!TypeRegex.IsMatch(serializer.Type))
+            throw new ArgumentException($"Serializer type {serializer.Type} must be in kebab case with a version number in the end", nameof(serializer));
         
         _serializer = serializer;
     }
@@ -48,6 +55,8 @@ public abstract class AbstractEventMapper<TEvent> : IEventMapper<TEvent> where T
     /// <param name="type">The type name to be used</param>
     protected void WillSerialize(string type)
     {
+        if (!TypeRegex.IsMatch(type))
+            throw new ArgumentException($"Serializer type {type} must be in kebab case with a version number in the end", nameof(type));
         WillSerialize(new EventSerializer<TEvent>(type));
     }
 
