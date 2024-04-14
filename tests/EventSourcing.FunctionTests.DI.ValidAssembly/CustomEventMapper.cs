@@ -6,7 +6,7 @@ public class CustomEventMapper : AbstractEventMapper<CustomEvent>
 {
     public CustomEventMapper()
     {
-        WillSerialize("my-custom-event");
-        CanDeserialize("my-custom-event");
+        WillSerialize("my-custom-event-v1");
+        CanDeserialize("my-custom-event-v1");
     }
 }

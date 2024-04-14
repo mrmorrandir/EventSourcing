@@ -1,4 +1,5 @@
-﻿using EventSourcing.Abstractions;
+﻿using System.Text.RegularExpressions;
+using EventSourcing.Abstractions;
 
 namespace EventSourcing.Mappers;
 
@@ -22,6 +23,10 @@ public class DefaultEventMapper<TEvent> : AbstractEventMapper<TEvent> where TEve
 
     private static string ToKebabCase(string type)
     {
-        return string.Concat(type.Select((x, i) => i > 0 && char.IsUpper(x) ? "-" + x.ToString() : x.ToString())).ToLower();
+        var kebabCaseName = string.Concat(type.Select((x, i) => i > 0 && char.IsUpper(x) ? "-" + x : x.ToString())).ToLower();
+        // Check if the kebab case name already has a version number with a regex
+        if (!VersionSuffixRegex.IsMatch(kebabCaseName))
+            kebabCaseName += "-v1"; // default versioning
+        return kebabCaseName;
     }
 }

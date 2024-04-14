@@ -13,7 +13,7 @@ public class DefaultEventMapperTests
 
         var serialized = mapper.Serialize(someEvent);
 
-        serialized.Type.Should().Be("some-event");
+        serialized.Type.Should().Be("some-event-v1");
         serialized.Data.Should().Be("{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
     }
     
@@ -23,7 +23,7 @@ public class DefaultEventMapperTests
         var mapper = new SomeDefaultEventMapper();
         var someEvent = new SomeEvent(Guid.NewGuid(), "Some text");
 
-        var deserialized = mapper.Deserialize("some-event", "{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
+        var deserialized = mapper.Deserialize("some-event-v1", "{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
 
         deserialized.Id.Should().Be(someEvent.Id);
         deserialized.Text.Should().Be(someEvent.Text);
@@ -47,7 +47,7 @@ public class AbstractEventMapperTests
     {
         var mapper = new AbstractEventMapperImplementedWrong2();
 
-        Action action = () => mapper.Deserialize("abstract-event-mapper-implemented-wrong-event", "{\"id\":\"" + Guid.NewGuid() + "\",\"text\":\"Some text\"}");
+        Action action = () => mapper.Deserialize("abstract-event-mapper-implemented-wrong-event-v1", "{\"id\":\"" + Guid.NewGuid() + "\",\"text\":\"Some text\"}");
 
         action.Should().Throw<InvalidOperationException>();
     }
@@ -70,7 +70,7 @@ public class AbstractEventMapperImplementedWrong1 : AbstractEventMapper<Abstract
         // No Serializer
         
         // One Deserializer
-        CanDeserialize("abstract-event-mapper-implemented-wrong1-event");
+        CanDeserialize("abstract-event-mapper-implemented-wrong1-event-v1");
     }
 }
 public record AbstractEventMapperImplementedWrong2Event(Guid Id, string Text) : IEvent;
@@ -79,7 +79,7 @@ public class AbstractEventMapperImplementedWrong2 : AbstractEventMapper<Abstract
     public AbstractEventMapperImplementedWrong2()
     {
         // One Serializer
-        WillSerialize("abstract-event-mapper-implemented-wrong2-event");
+        WillSerialize("abstract-event-mapper-implemented-wrong2-event-v1");
         
         // No Deserializer
     }
@@ -91,10 +91,10 @@ public class AbstractEventMapperImplementedWrong3 : AbstractEventMapper<Abstract
     public AbstractEventMapperImplementedWrong3()
     {
         // Two Serializers
-        WillSerialize("abstract-event-mapper-implemented-wrong3-event");
-        WillSerialize("abstract-event-mapper-implemented-wrong3-event");
+        WillSerialize("abstract-event-mapper-implemented-wrong3-event-v1");
+        WillSerialize("abstract-event-mapper-implemented-wrong3-event-v2");
         
         // One Deserializer
-        CanDeserialize("abstract-event-mapper-implemented-wrong3-event");
+        CanDeserialize("abstract-event-mapper-implemented-wrong3-event-v1");
     }
 }
