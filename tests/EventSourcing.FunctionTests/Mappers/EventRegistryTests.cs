@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using EventSourcing.Abstractions.Mappers;
+using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;

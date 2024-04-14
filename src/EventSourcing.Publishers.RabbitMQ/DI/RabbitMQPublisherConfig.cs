@@ -1,5 +1,4 @@
 using System.Reflection;
-using EventSourcing.Abstractions;
 
 namespace EventSourcing.Publishers.RabbitMQPublisher;
 

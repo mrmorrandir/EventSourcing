@@ -1,12 +1,8 @@
 ﻿using System.Reflection;
 using EventSourcing;
-using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
-using EventSourcing.Abstractions.Projections;
-using EventSourcing.Abstractions.Repositories;
-using EventSourcing.Abstractions.Stores;
 using EventSourcing.Contexts;
 using EventSourcing.Mappers;
+using EventSourcing.Projections;
 using EventSourcing.Repositories;
 using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;

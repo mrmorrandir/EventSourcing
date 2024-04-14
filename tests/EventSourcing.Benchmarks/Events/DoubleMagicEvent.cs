@@ -1,5 +1,3 @@
-﻿using EventSourcing.Abstractions;
-
-namespace EventSourcing.Benchmarks;
+﻿namespace EventSourcing.Benchmarks;
 
 public record DoubleMagicEvent(Guid Id, string Magic, DateTime Created) : IEvent;

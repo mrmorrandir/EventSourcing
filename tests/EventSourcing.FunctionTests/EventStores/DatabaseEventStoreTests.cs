@@ -1,5 +1,4 @@
-﻿using EventSourcing.Abstractions.Stores;
-using EventSourcing.Contexts;
+﻿using EventSourcing.Contexts;
 using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

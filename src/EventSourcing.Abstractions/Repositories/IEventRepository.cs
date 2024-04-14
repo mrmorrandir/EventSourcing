@@ -1,6 +1,6 @@
 ﻿using FluentResults;
 
-namespace EventSourcing.Abstractions.Repositories;
+namespace EventSourcing.Repositories;
 
 public interface IEventRepository
 {

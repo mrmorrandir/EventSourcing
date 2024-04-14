@@ -1,6 +1,4 @@
-﻿using EventSourcing.Abstractions.Stores;
-
-namespace EventSourcing.Stores;
+﻿namespace EventSourcing.Stores;
 
 public class EventData : IEventData
 {

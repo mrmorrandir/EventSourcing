@@ -1,7 +1,6 @@
 ﻿// ReSharper disable once CheckNamespace
 
 using System.Reflection;
-using EventSourcing.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 

@@ -1,6 +1,4 @@
 using System.Reflection;
-using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
 using EventSourcing.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using EventSourcing.Abstractions.Stores;
 
 namespace EventSourcing.Stores;
 

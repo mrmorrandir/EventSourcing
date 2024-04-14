@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using EventSourcing.Abstractions;
 
 namespace EventSourcing.Mappers;
 

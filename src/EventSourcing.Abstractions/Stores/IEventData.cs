@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Abstractions.Stores;
+﻿namespace EventSourcing.Stores;
 
 public interface IEventData
 {

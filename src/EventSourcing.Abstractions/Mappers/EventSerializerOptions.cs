@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EventSourcing.Abstractions.Mappers;
+namespace EventSourcing.Mappers;
 
 public static class EventSerializerOptions
 {

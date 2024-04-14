@@ -1,6 +1,4 @@
-﻿using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
-using EventSourcing.Repositories;
+﻿using EventSourcing.Repositories;
 
 namespace EventSourcing.Mappers;
 

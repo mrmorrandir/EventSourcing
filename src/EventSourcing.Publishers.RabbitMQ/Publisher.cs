@@ -1,6 +1,5 @@
 using System.Text;
-using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
+using EventSourcing.Mappers;
 using RabbitMQ.Client;
 
 namespace EventSourcing.Publishers.RabbitMQPublisher;

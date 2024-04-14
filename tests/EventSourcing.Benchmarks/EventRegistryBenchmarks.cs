@@ -1,6 +1,5 @@
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
-using EventSourcing.Abstractions.Mappers;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.Extensions.DependencyInjection;

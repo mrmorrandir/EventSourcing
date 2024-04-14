@@ -1,5 +1,4 @@
-﻿using EventSourcing.Abstractions.Stores;
-using EventSourcing.Stores;
+﻿using EventSourcing.Stores;
 
 namespace DPS2.Processes.Infrastructure.UnitTests.EventStores;
 

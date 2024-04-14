@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Abstractions;
+﻿namespace EventSourcing;
 
 public interface IAggregateRoot
 {

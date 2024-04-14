@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using EventSourcing.Abstractions.Mappers;
+using EventSourcing.Mappers;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
