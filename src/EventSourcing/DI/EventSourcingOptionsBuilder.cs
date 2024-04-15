@@ -1,5 +1,8 @@
+using System.Reflection;
 using EventSourcing;
 using EventSourcing.Contexts;
+using EventSourcing.Mappers;
+using EventSourcing.Projections;
 using EventSourcing.Repositories;
 using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
@@ -25,12 +28,30 @@ public class EventSourcingOptionsBuilder
         _eventProjectionOptionsBuilder = new EventProjectionOptionsBuilder(services);
     }
     
+    /// <summary>
+    /// Configure the database context for the event store.
+    /// </summary>
+    /// <param name="options">An action to configure the database context with</param>
+    /// <returns>The <see cref="EventSourcingOptionsBuilder"/> to be used for further configuration</returns>
     public EventSourcingOptionsBuilder ConfigureEventStoreDbContext(Action<DbContextOptionsBuilder> options)
     {
         _dbContextOptionsBuilderAction = options;
         return this;
     }
     
+    /// <summary>
+    /// Configure the mapping (meaning serialization and deserialization) of the events.
+    /// <para>
+    /// Without this configuration a <see cref="DefaultEventMapper{TEvent}"/> will be used for each event type (which inherits from <see cref="IEvent"/>) that is not covered by a custom mapper.
+    /// A custom mapper is a class that implements the <see cref="IEventMapper{TEvent}"/> interface or inherits from the <see cref="AbstractEventMapper{TEvent}"/> class.
+    /// </para>
+    /// <para>
+    /// If you configured the mapping to not use default mappers (e.g. by using <see cref="EventMappingOptionsBuilder.AddMappers(bool)"/> or <see cref="EventMappingOptionsBuilder.AddMappers(Assembly,bool)"/> with <c>registerDefaultMappers: false</c>), an exception will be thrown if there are uncovered events.
+    /// (This can be ignored by calling <see cref="EventMappingOptionsBuilder.IgnoreUncoveredEvents"/>)
+    /// </para>
+    /// </summary>
+    /// <param name="options">An action to configure the mappings with</param>
+    /// <returns>The <see cref="EventSourcingOptionsBuilder"/> to be used for further configuration</returns>
     public EventSourcingOptionsBuilder ConfigureMapping(Action<EventMappingOptionsBuilder> options)
     {
         options(_eventMappingOptionsBuilder);
@@ -38,6 +59,16 @@ public class EventSourcingOptionsBuilder
         return this;
     }
     
+    /// <summary>
+    /// Configure the projections for the events.
+    /// <para>
+    /// Without this configuration all types that implement the <see cref="IProjection{TEvent}"/> interface will be registered as projections.
+    /// If there were events registered in the mapping that are not covered by a projection, an exception will be thrown.
+    /// (This can be ignored by calling <see cref="EventProjectionOptionsBuilder.IgnoreUncoveredEvents"/>)
+    /// </para>
+    /// </summary>
+    /// <param name="options">An action to configure the projections with</param>
+    /// <returns>The <see cref="EventSourcingOptionsBuilder"/> to be used for further configuration</returns>
     public EventSourcingOptionsBuilder ConfigureProjections(Action<EventProjectionOptionsBuilder> options)
     {
         options(_eventProjectionOptionsBuilder);
