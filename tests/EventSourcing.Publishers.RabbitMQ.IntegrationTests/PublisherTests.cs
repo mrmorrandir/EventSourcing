@@ -27,8 +27,10 @@ public class PublisherTests
             config.AddDefaultPublishersForAssembly(Assembly.GetExecutingAssembly());
             config.BaseExchangeName = exchangeName;
         });
-        services.AddEventSourcing(config => config.UseInMemoryDatabase("TestDatabase"));
-        services.AddEventMappers(config => config.AddDefaultMappers(Assembly.GetExecutingAssembly()));
+        services.AddEventSourcing(config =>
+        {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("TestDatabase"));
+        });
         var serviceProvider = services.BuildServiceProvider();
         var eventRegistry = serviceProvider.GetRequiredService<IEventRegistry>();
         var connectionFactory = serviceProvider.GetRequiredService<IAsyncConnectionFactory>();

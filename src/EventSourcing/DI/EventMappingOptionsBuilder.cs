@@ -21,7 +21,7 @@ public class EventMappingOptionsBuilder
     
     public EventMappingOptionsBuilder AddMappers(bool registerDefaultMappers = true)
     {
-        _assembliesToRegisterMappers.Add(new EventMapperAssembly(Assembly.GetCallingAssembly(), registerDefaultMappers));
+        _assembliesToRegisterMappers.Add(new EventMapperAssembly(Assembly.GetEntryAssembly()!, registerDefaultMappers));
         return this;
     } 
     
@@ -45,6 +45,7 @@ public class EventMappingOptionsBuilder
 
     public void Build()
     {
+        _services.AddScoped<IEventRegistry, EventRegistry>();
         var eventMappers = new List<EventMapperType> ();
         foreach (var assembly in _assembliesToRegisterMappers)
         {

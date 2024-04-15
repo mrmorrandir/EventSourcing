@@ -14,7 +14,7 @@ public class EventRegistryBenchmarks
     public EventRegistryBenchmarks()
     {
         var services = new ServiceCollection();
-        services.AddEventMappers(config => config.AddCustomMappers(Assembly.GetExecutingAssembly()));
+        services.AddEventSourcing(config => config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly())));
         var serviceProvider = services.BuildServiceProvider();
         _registry = (EventRegistry)serviceProvider.GetRequiredService<IEventRegistry>();
     }

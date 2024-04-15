@@ -18,7 +18,7 @@ public class EventProjectionOptionsBuilder
     
     public EventProjectionOptionsBuilder AddProjections()
     {
-        _assembliesToRegisterProjections.Add(new EventProjectionAssembly(Assembly.GetCallingAssembly()));
+        _assembliesToRegisterProjections.Add(new EventProjectionAssembly(Assembly.GetEntryAssembly()!));
         return this;
     }
     

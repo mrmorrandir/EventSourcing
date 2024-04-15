@@ -20,7 +20,8 @@ public class EventSourcingOptionsBuilder
     private Action<DbContextOptionsBuilder>? _dbContextOptionsBuilderAction;
     private bool _mappingConfigured;
     private bool _projectionsConfigured;
-    
+    private bool _databaseConfigured;
+
     public EventSourcingOptionsBuilder(IServiceCollection services)
     {
         _services = services;
@@ -36,6 +37,7 @@ public class EventSourcingOptionsBuilder
     public EventSourcingOptionsBuilder ConfigureEventStoreDbContext(Action<DbContextOptionsBuilder> options)
     {
         _dbContextOptionsBuilderAction = options;
+        _databaseConfigured = true;
         return this;
     }
     
@@ -85,8 +87,8 @@ public class EventSourcingOptionsBuilder
     
     public void Build()
     {
-        if (_dbContextOptionsBuilderAction == null)
-            throw new InvalidOperationException("The event store database context has to be configured.");
+        if (!_databaseConfigured)
+            _dbContextOptionsBuilderAction = options => options.UseInMemoryDatabase("EventStore");        
         _services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(opt => _dbContextOptionsBuilderAction?.Invoke(opt));
         _services.AddScoped<IEventStore, EventStore>();
         _services.AddScoped<IEventRepository, EventRepository>();
