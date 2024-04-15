@@ -4,6 +4,7 @@ using EventSourcing.Repositories;
 using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
 
 public class EventSourcingOptionsBuilder
@@ -11,12 +12,17 @@ public class EventSourcingOptionsBuilder
     private readonly IServiceCollection _services;
     private readonly List<Action<IServiceCollection>> _extensions = new();
     private readonly EventMappingOptionsBuilder _eventMappingOptionsBuilder;
+    private readonly EventProjectionOptionsBuilder _eventProjectionOptionsBuilder;
+    
     private Action<DbContextOptionsBuilder>? _dbContextOptionsBuilderAction;
-
+    private bool _mappingConfigured;
+    private bool _projectionsConfigured;
+    
     public EventSourcingOptionsBuilder(IServiceCollection services)
     {
         _services = services;
         _eventMappingOptionsBuilder = new EventMappingOptionsBuilder(services);
+        _eventProjectionOptionsBuilder = new EventProjectionOptionsBuilder(services);
     }
     
     public EventSourcingOptionsBuilder ConfigureEventStoreDbContext(Action<DbContextOptionsBuilder> options)
@@ -28,6 +34,14 @@ public class EventSourcingOptionsBuilder
     public EventSourcingOptionsBuilder ConfigureMapping(Action<EventMappingOptionsBuilder> options)
     {
         options(_eventMappingOptionsBuilder);
+        _mappingConfigured = true;
+        return this;
+    }
+    
+    public EventSourcingOptionsBuilder ConfigureProjections(Action<EventProjectionOptionsBuilder> options)
+    {
+        options(_eventProjectionOptionsBuilder);
+        _projectionsConfigured = true;
         return this;
     }
     
@@ -47,12 +61,13 @@ public class EventSourcingOptionsBuilder
         _services.AddScoped<IEventRepository, EventRepository>();
         _services.AddTransient<IEventBus, EventBus>();
         
-        if (_dbContextOptionsBuilderAction is null)
-        {
-            // Default behaviour
+        if (!_mappingConfigured)
             _eventMappingOptionsBuilder.AddMappers();
-        }
+        if (!_projectionsConfigured)
+            _eventProjectionOptionsBuilder.AddProjections();
+        
         _eventMappingOptionsBuilder.Build();
+        _eventProjectionOptionsBuilder.Build();
         
         foreach (var extension in _extensions)
             extension(_services);

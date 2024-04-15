@@ -5,21 +5,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.FunctionTests.DI;
 
-public class DependencyInjectionTests
+public class DependencyInjectionNewTests
 {
     [Fact]
     public void RegistrationShouldWork_WhenEventMappersAndEventsAreCorrect()
     {
         var services = new ServiceCollection();
-        services.AddEventSourcing(builder => builder.UseInMemoryDatabase("Test"))
-            .AddEventMappers(config =>
-            {
-                var assembly = typeof(ValidAssembly.CustomEvent).Assembly;
-                config
-                    .AddCustomMappers(assembly)
-                    .AddDefaultMappers(assembly);
-            });
-        services.AddProjections(config => config.AddProjections(Assembly.GetExecutingAssembly()));
+        services.AddEventSourcingNew(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(ValidAssembly.CustomEvent).Assembly));
+            options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()));
+        });
         var provider = services.BuildServiceProvider();
 
         var eventMappers = provider.GetRequiredService<IEnumerable<IEventMapper>>().ToArray();
@@ -34,18 +31,13 @@ public class DependencyInjectionTests
     {
         var services = new ServiceCollection();
         
-        var func = () => services.AddEventSourcing(builder => builder.UseInMemoryDatabase("Test"))
-            .AddEventMappers(config =>
-            {
-                var assembly = typeof(InvalidAssembly.CustomEvent).Assembly;
-                config
-                    .AddCustomMappers(assembly)
-                    .AddDefaultMappers(assembly);
-            });
+        var func = () => services.AddEventSourcingNew(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly.CustomEvent).Assembly));
+        });
 
         func.Should().Throw<InvalidOperationException>().WithMessage("*multiple*");
+
     }
 }
-
-
-

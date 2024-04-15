@@ -1,5 +1,6 @@
 using System.Reflection;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
 
 internal class EventMapperAssembly
