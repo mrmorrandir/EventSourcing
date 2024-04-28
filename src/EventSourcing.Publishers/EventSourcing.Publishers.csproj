@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.0.0-beta001</Version>
+        <Version>1.0.0-beta004</Version>
         <Title>EventSourcing.Publishers</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>
