@@ -1,4 +1,4 @@
-namespace EventSourcing.Abstractions;
+namespace EventSourcing;
 
 /// <summary>
 /// Documents a Change to an Aggregate

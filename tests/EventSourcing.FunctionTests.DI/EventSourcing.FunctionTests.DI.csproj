@@ -27,7 +27,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\EventSourcing.Publishers.RabbitMQ\EventSourcing.Publishers.RabbitMQ.csproj" />
       <ProjectReference Include="..\..\src\EventSourcing\EventSourcing.csproj" />
+      <ProjectReference Include="..\EventSourcing.FunctionTests.DI.InvalidAssembly2\EventSourcing.FunctionTests.DI.InvalidAssembly2.csproj" />
       <ProjectReference Include="..\EventSourcing.FunctionTests.DI.InvalidAssembly\EventSourcing.FunctionTests.DI.InvalidAssembly.csproj" />
       <ProjectReference Include="..\EventSourcing.FunctionTests.DI.ValidAssembly\EventSourcing.FunctionTests.DI.ValidAssembly.csproj" />
     </ItemGroup>

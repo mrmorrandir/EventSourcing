@@ -1,6 +1,4 @@
-﻿using EventSourcing.Abstractions;
-
-namespace EventSourcing.Publishers;
+﻿namespace EventSourcing.Publishers;
 
 public interface IPublisher<TEvent> : IEventHandler<TEvent> where TEvent : IEvent
 {

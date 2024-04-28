@@ -2,8 +2,7 @@ using System.Reflection;
 using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using System.Text.Json;
-using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
+using EventSourcing.Mappers;
 using EventSourcing.Publishers.RabbitMQPublisher;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,22 +14,14 @@ namespace EventSourcing.Publishers.RabbitMQ.IntegrationTests;
 public class PublisherTests
 {
     [Fact]
-    public async Task ShouldWork()
+    public async Task PublishAsync_ShouldSucceed_WhenDataIsValid()
     {
         const string exchangeName = "testExchange";
         const string queueName = "testQueue";
         var received = false;
         RabbitTestEvent? receivedEvent = null;
         var rabbitMqTestEvent = new RabbitTestEvent(Guid.NewGuid(), "Test");
-        var services = new ServiceCollection();
-        services.AddRabbitMQPublishers(config =>
-        {
-            config.AddDefaultPublishersForAssembly(Assembly.GetExecutingAssembly());
-            config.BaseExchangeName = exchangeName;
-        });
-        services.AddEventSourcing(config => config.UseInMemoryDatabase("TestDatabase"));
-        services.AddEventMappers(config => config.AddDefaultMappers(Assembly.GetExecutingAssembly()));
-        var serviceProvider = services.BuildServiceProvider();
+        var serviceProvider = GetServices(exchangeName);
         var eventRegistry = serviceProvider.GetRequiredService<IEventRegistry>();
         var connectionFactory = serviceProvider.GetRequiredService<IAsyncConnectionFactory>();
         using var connection = connectionFactory.CreateConnection();
@@ -56,6 +47,25 @@ public class PublisherTests
         //await Task.Delay(10);
         received.Should().BeTrue();
         receivedEvent.Should().BeEquivalentTo(rabbitMqTestEvent);
+    }
+
+    private static ServiceProvider GetServices(string exchangeName)
+    {
+        var services = new ServiceCollection();
+        services.AddEventSourcing(config =>
+        {
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+            config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("TestDatabase"));
+            config.AddRabbitMQPublishing(options =>
+            {
+                options.UseConnection("localhost", "guest", "guest");
+                options.UseBaseExchangeName(exchangeName);
+                options.AddPublisher<RabbitTestEvent>();
+            });
+        });
+        var serviceProvider = services.BuildServiceProvider();
+        return serviceProvider;
     }
 }
 

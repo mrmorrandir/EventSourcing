@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using EventSourcing.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace EventSourcing;

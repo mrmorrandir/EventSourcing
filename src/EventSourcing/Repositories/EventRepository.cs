@@ -1,7 +1,4 @@
-﻿using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
-using EventSourcing.Abstractions.Repositories;
-using EventSourcing.Abstractions.Stores;
+﻿using EventSourcing.Mappers;
 using EventSourcing.Stores;
 using FluentResults;
 

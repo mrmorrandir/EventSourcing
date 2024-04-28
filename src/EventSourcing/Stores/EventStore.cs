@@ -1,5 +1,4 @@
-﻿using EventSourcing.Abstractions.Stores;
-using EventSourcing.Contexts;
+﻿using EventSourcing.Contexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventSourcing.Stores;

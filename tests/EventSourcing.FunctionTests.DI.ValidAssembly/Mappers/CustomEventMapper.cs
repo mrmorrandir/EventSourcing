@@ -1,6 +1,7 @@
-﻿using EventSourcing.Mappers;
+﻿using EventSourcing.FunctionTests.DI.ValidAssembly.Events;
+using EventSourcing.Mappers;
 
-namespace EventSourcing.FunctionTests.DI.ValidAssembly;
+namespace EventSourcing.FunctionTests.DI.ValidAssembly.Mappers;
 
 public class CustomEventMapper : AbstractEventMapper<CustomEvent>
 {

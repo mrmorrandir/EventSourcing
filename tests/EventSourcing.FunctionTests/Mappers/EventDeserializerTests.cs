@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using EventSourcing.Abstractions.Mappers;
 using EventSourcing.Mappers;
 
 namespace EventSourcing.FunctionTests.Mappers;

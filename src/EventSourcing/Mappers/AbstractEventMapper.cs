@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
-using EventSourcing.Abstractions;
-using EventSourcing.Abstractions.Mappers;
 
 namespace EventSourcing.Mappers;
 

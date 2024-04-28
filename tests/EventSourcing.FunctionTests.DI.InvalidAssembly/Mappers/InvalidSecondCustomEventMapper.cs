@@ -1,6 +1,7 @@
-﻿using EventSourcing.Mappers;
+﻿using EventSourcing.FunctionTests.DI.InvalidAssembly.Events;
+using EventSourcing.Mappers;
 
-namespace EventSourcing.FunctionTests.DI.InvalidAssembly;
+namespace EventSourcing.FunctionTests.DI.InvalidAssembly.Mappers;
 
 public class InvalidSecondCustomEventMapper : AbstractEventMapper<CustomEvent>
 {

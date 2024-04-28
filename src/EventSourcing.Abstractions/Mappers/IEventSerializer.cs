@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Abstractions.Mappers;
+﻿namespace EventSourcing.Mappers;
 
 public interface IEventSerializer<TEvent> where TEvent : IEvent
 {
