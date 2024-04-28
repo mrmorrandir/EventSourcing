@@ -1,6 +1,7 @@
 using System.Reflection;
 using EventSourcing.Mappers;
 using EventSourcing.Projections;
+using EventSourcing.Publishers.RabbitMQPublisher;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -45,6 +46,65 @@ public class DependencyInjectionTests
         });
 
         func.Should().Throw<InvalidOperationException>().WithMessage("*multiple*");
+    }
+    
+    [Fact]
+    public void RegistrationShouldThrowException_WhenNoEventMappersExist()
+    {
+        var services = new ServiceCollection();
+        
+        var func = () => services.AddEventSourcing(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly, false));
+            options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+        });
 
+        func.Should().Throw<InvalidOperationException>().WithMessage("*uncovered events (in mappings)*");
+    }
+    
+    [Fact]
+    public void RegistrationShouldThrowException_WhenMissingMappersAreIgnored()
+    {
+        var services = new ServiceCollection();
+        
+        var func = () => services.AddEventSourcing(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly, false).IgnoreUncoveredEvents());
+            options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+        });
+
+        func.Should().NotThrow();
+    }
+    
+    [Fact]
+    public void RegistrationShouldThrowException_WhenNoProjectionExists()
+    {
+        var services = new ServiceCollection();
+        
+        var func = () => services.AddEventSourcing(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMapper<DefaultEventMapper<InvalidAssembly.Events.DefaultEvent>>());
+            options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()));
+        });
+
+        func.Should().Throw<InvalidOperationException>().WithMessage("*uncovered events (in projections)*");
+    }
+    
+    [Fact]
+    public void RegistrationShouldWork_WhenMissingProjectionsAreIgnored()
+    {
+        var services = new ServiceCollection();
+        
+        var func = () => services.AddEventSourcing(options =>
+        {
+            options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMapper<DefaultEventMapper<InvalidAssembly.Events.DefaultEvent>>());
+            options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(typeof(InvalidAssembly.Events.DefaultEvent).Assembly).IgnoreUncoveredEvents());
+        });
+
+        func.Should().NotThrow();
     }
 }
