@@ -104,9 +104,6 @@ public class EventMappingOptionsBuilder
 
         var uncoveredEvents = _assembliesToRegisterMappers.SelectMany(assembly => assembly.Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && t.GetInterfaces().Any(i => i == typeof(IEvent)) && !alreadyCoveredEvents.Contains(t))).ToList();
-
-        foreach(var eventType in alreadyCoveredEvents)
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEvent), eventType));
         
         if (_ignoreUncoveredEvents || !uncoveredEvents.Any()) return;
         var uncoveredEventNames = string.Join(", ", uncoveredEvents.Select(x => x.Name));
