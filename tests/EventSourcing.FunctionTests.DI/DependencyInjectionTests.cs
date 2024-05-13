@@ -2,6 +2,7 @@ using System.Reflection;
 using EventSourcing.Mappers;
 using EventSourcing.Projections;
 using EventSourcing.Publishers.RabbitMQPublisher;
+using EventSourcing.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,7 @@ public class DependencyInjectionTests
 
         var eventMappers = provider.GetRequiredService<IEnumerable<IEventMapper>>().ToArray();
         var projections = provider.GetRequiredService<IEnumerable<IEventHandler>>().Select(s => (IEventHandler)s).ToList();
+        var eventRepository = provider.GetRequiredService<IEventRepository>();
         
         eventMappers.Should().ContainSingle(m => m.Types.Contains("my-custom-event-v1") && m.EventType == typeof(ValidAssembly.Events.CustomEvent));
         eventMappers.Should().ContainSingle(m => m.Types.Contains("default-event-v1") && m.EventType == typeof(ValidAssembly.Events.DefaultEvent));

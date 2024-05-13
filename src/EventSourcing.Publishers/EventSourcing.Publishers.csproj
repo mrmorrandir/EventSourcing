@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.0.0-beta006</Version>
+        <Version>1.0.0-preview-20240513-0708</Version>
         <Title>EventSourcing.Publishers</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>

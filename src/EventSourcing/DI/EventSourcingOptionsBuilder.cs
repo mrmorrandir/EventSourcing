@@ -25,8 +25,8 @@ public class EventSourcingOptionsBuilder
     public EventSourcingOptionsBuilder(IServiceCollection services)
     {
         _services = services;
-        _eventMappingOptionsBuilder = new EventMappingOptionsBuilder(services);
-        _eventProjectionOptionsBuilder = new EventProjectionOptionsBuilder(services);
+        _eventMappingOptionsBuilder = new EventMappingOptionsBuilder();
+        _eventProjectionOptionsBuilder = new EventProjectionOptionsBuilder();
     }
     
     /// <summary>
@@ -88,19 +88,27 @@ public class EventSourcingOptionsBuilder
     public void Build()
     {
         if (!_databaseConfigured)
-            _dbContextOptionsBuilderAction = options => options.UseInMemoryDatabase("EventStore");        
+            throw new InvalidOperationException("The event store database context must be configured.");    
+        if (!_mappingConfigured)
+            throw new InvalidOperationException("The event mapping must be configured.");
+        if (!_projectionsConfigured)
+            throw new InvalidOperationException("The event projections must be configured.");
+        
         _services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(opt => _dbContextOptionsBuilderAction?.Invoke(opt));
         _services.AddScoped<IEventStore, EventStore>();
         _services.AddScoped<IEventRepository, EventRepository>();
         _services.AddTransient<IEventBus, EventBus>();
-        
-        if (!_mappingConfigured)
-            _eventMappingOptionsBuilder.AddMappers();
+
         if (!_projectionsConfigured)
             _eventProjectionOptionsBuilder.AddProjections();
         
-        _eventMappingOptionsBuilder.Build();
-        _eventProjectionOptionsBuilder.Build();
+        var eventMappingOptions = _eventMappingOptionsBuilder.Build();
+        foreach (var service in eventMappingOptions.Services)
+            _services.Add(service);
+        
+        var eventProjectionOptions = _eventProjectionOptionsBuilder.Build(eventMappingOptions.CoveredEvents);
+        foreach (var service in eventProjectionOptions.Services)
+            _services.Add(service);
         
         foreach (var extension in _extensions)
             extension(_services);

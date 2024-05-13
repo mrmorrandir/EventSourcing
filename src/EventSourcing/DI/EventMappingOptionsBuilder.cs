@@ -9,21 +9,13 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public class EventMappingOptionsBuilder
 {
-    private readonly IServiceCollection _services;
     private readonly List<Type> _mappersToRegister = new();
     private readonly List<EventMapperAssembly> _assembliesToRegisterMappers = new();
     private bool _ignoreUncoveredEvents = false;
 
-    public EventMappingOptionsBuilder(IServiceCollection services)
+    public EventMappingOptionsBuilder()
     {
-        _services = services;
     }
-    
-    public EventMappingOptionsBuilder AddMappers(bool registerDefaultMappers = true)
-    {
-        _assembliesToRegisterMappers.Add(new EventMapperAssembly(Assembly.GetEntryAssembly()!, registerDefaultMappers));
-        return this;
-    } 
     
     public EventMappingOptionsBuilder AddMappers(Assembly assembly, bool registerDefaultMappers = true)
     {
@@ -43,9 +35,10 @@ public class EventMappingOptionsBuilder
         return this;
     }
 
-    public void Build()
+    public EventMappingOptions Build()
     {
-        _services.AddScoped<IEventRegistry, EventRegistry>();
+        var services = new ServiceCollection();
+        services.AddScoped<IEventRegistry, EventRegistry>();
         var eventMappers = new List<EventMapperType> ();
         foreach (var assembly in _assembliesToRegisterMappers)
         {
@@ -70,7 +63,7 @@ public class EventMappingOptionsBuilder
         }
         
         foreach (var eventMapper in eventMappers)
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), eventMapper.Type));
+            services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), eventMapper.Type));
 
         var alreadyCoveredEvents = eventMappers.Select(mapper => mapper.EventType).ToList();
         foreach (var assembly in _assembliesToRegisterMappers.Where(a => a.RegisterDefaultMappers)) 
@@ -85,7 +78,7 @@ public class EventMappingOptionsBuilder
                 if (alreadyCoveredEvents.Contains(eventType)) continue;
                 
                 var defaultEventMapperType = typeof(DefaultEventMapper<>).MakeGenericType(eventType);
-                _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), defaultEventMapperType));
+                services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), defaultEventMapperType));
                 alreadyCoveredEvents.Add(eventType);
             }
         }
@@ -98,17 +91,16 @@ public class EventMappingOptionsBuilder
                 .GetGenericArguments()[0];
             if (alreadyCoveredEvents.Contains(eventType))
                 throw new InvalidOperationException($"The mapper {mapper.Name} cannot be registered by the AddMapper<TEventMapper>() method.\nThere is already an event mapper for the event type {eventType.Name}.");
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), mapper));
+            services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventMapper), mapper));
             alreadyCoveredEvents.Add(eventType);
         }
 
         var uncoveredEvents = _assembliesToRegisterMappers.SelectMany(assembly => assembly.Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && t.GetInterfaces().Any(i => i == typeof(IEvent)) && !alreadyCoveredEvents.Contains(t))).ToList();
         
-        foreach(var eventType in alreadyCoveredEvents)
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEvent), eventType));
-        
-        if (_ignoreUncoveredEvents || !uncoveredEvents.Any()) return;
+        if (_ignoreUncoveredEvents || !uncoveredEvents.Any())
+            return new EventMappingOptions(services, alreadyCoveredEvents, uncoveredEvents);
+
         var uncoveredEventNames = string.Join(", ", uncoveredEvents.Select(x => x.Name));
         throw new InvalidOperationException($"There are uncovered events (in mappings): {uncoveredEventNames}");
     }
