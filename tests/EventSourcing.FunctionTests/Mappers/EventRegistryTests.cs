@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using JsonConverter = System.Text.Json.Serialization.JsonConverter;
@@ -17,6 +18,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
@@ -35,6 +37,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
@@ -60,6 +63,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
@@ -82,6 +86,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
@@ -104,6 +109,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
@@ -123,6 +129,7 @@ public class EventRegistryTests
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
             config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });

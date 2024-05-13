@@ -7,13 +7,11 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public class EventProjectionOptionsBuilder
 {
-    private readonly IServiceCollection _services;
     private readonly List<EventProjectionAssembly> _assembliesToRegisterProjections = new();
     private bool _ignoreUncoveredEvents;
 
-    public EventProjectionOptionsBuilder(IServiceCollection services)
+    public EventProjectionOptionsBuilder()
     {
-        _services = services;
     }
     
     public EventProjectionOptionsBuilder AddProjections()
@@ -34,8 +32,9 @@ public class EventProjectionOptionsBuilder
         return this;
     }
 
-    public void Build()
+    public EventProjectionOptions Build(IEnumerable<Type>? recentlyFoundEvents = null)
     {
+        var services = new ServiceCollection();
         var projectionTypes = new List<ProjectionType>();
         foreach (var assembly in _assembliesToRegisterProjections)
         {
@@ -52,15 +51,15 @@ public class EventProjectionOptionsBuilder
         foreach (var projectionType in projectionTypes)
         {
             var genericType =  typeof(IEventHandler<>).MakeGenericType(projectionType.EventType);
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(genericType, projectionType.Type));
-            _services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventHandler), projectionType.Type));
+            services.TryAddEnumerable(ServiceDescriptor.Transient(genericType, projectionType.Type));
+            services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IEventHandler), projectionType.Type));
             alreadyCoveredEvents.Add(projectionType.EventType);
         }
         
-        if (_ignoreUncoveredEvents) return;
-        var allEvents = _services.Where(descriptor => descriptor.ServiceType == typeof(IEvent)).Select(descriptor => descriptor.ImplementationType).ToList();
-        var uncoveredEvents = allEvents.Except(alreadyCoveredEvents).ToList();
-        if (!uncoveredEvents.Any()) return;
+        var uncoveredEvents = (recentlyFoundEvents ?? new List<Type>()).Except(alreadyCoveredEvents).ToList();
+        if (_ignoreUncoveredEvents || !uncoveredEvents.Any())
+            return new EventProjectionOptions(services, alreadyCoveredEvents, uncoveredEvents);
+
         var uncoveredEventNames = string.Join(", ", uncoveredEvents.Select(x => x?.FullName));
         throw new InvalidOperationException($"There are uncovered events (in projections): {uncoveredEventNames}");
     }
