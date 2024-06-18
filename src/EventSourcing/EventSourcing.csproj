@@ -17,7 +17,7 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
-        <PackageVersion>1.0.0-preview-20240513-0708</PackageVersion>
+        <PackageVersion>1.0.0-preview-20240618.1</PackageVersion>
         <PackageReleaseNotes>Breaking Changes - New Mapper Logic</PackageReleaseNotes>
     </PropertyGroup>
 
@@ -27,12 +27,12 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
 
     <ItemGroup>
       <PackageReference Include="FluentResults" Version="3.15.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.6">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.6" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
