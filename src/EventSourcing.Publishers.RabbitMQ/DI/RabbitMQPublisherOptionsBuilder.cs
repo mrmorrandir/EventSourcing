@@ -67,8 +67,8 @@ public class RabbitMQPublisherOptionsBuilder
                 var exchangeName = assembly.BaseExchangeName ?? _baseExchangeName;
                 if (string.IsNullOrWhiteSpace(exchangeName))
                     throw new InvalidOperationException("The exchange name must not be null or empty. Please provide a base exchange name via 'UseBaseExchangeName' or the optional parameter of 'AddPublishers'.");
-                _services.TryAddEnumerable(ServiceDescriptor.Transient(publisherServiceType, sp => ActivatorUtilities.CreateInstance(sp, publisherImplementationType, exchangeName)));
-                _services.TryAddEnumerable(ServiceDescriptor.Transient(eventHandlerServiceType, sp => ActivatorUtilities.CreateInstance(sp, publisherImplementationType, exchangeName)));
+                _services.AddTransient(publisherServiceType, sp => ActivatorUtilities.CreateInstance(sp, publisherImplementationType, exchangeName));
+                _services.AddTransient(eventHandlerServiceType, sp => ActivatorUtilities.CreateInstance(sp, publisherImplementationType, exchangeName));
                 if (registeredExchanges.Contains(exchangeName)) continue;
 
                 _services.AddTransient(sp => ActivatorUtilities.CreateInstance<ExchangeInitializer>(sp, exchangeName));

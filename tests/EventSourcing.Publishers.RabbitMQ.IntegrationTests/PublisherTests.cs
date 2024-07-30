@@ -96,7 +96,7 @@ public class PublisherTests : IAsyncLifetime
             {
                 options.UseConnection("localhost", "guest", "guest");
                 options.UseBaseExchangeName(exchangeName);
-                options.AddPublisher<RabbitTestEvent>();
+                options.AddPublishers(Assembly.GetExecutingAssembly(), exchangeName);
             });
         });
         var serviceProvider = services.BuildServiceProvider();
