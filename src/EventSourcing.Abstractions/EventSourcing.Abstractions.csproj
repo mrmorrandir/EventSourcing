@@ -14,8 +14,8 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>1.0.0-preview-20240618.1</PackageVersion>
-        <PackageReleaseNotes>Braking Changes - New Mapper Logic</PackageReleaseNotes>
+        <PackageVersion>1.0.0-preview-20240730.1</PackageVersion>
+        <PackageReleaseNotes></PackageReleaseNotes>
         <RootNamespace>EventSourcing</RootNamespace>
     </PropertyGroup>
 
