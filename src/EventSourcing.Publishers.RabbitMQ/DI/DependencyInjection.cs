@@ -16,4 +16,20 @@ public static class DependencyInjection
         
         return builder;
     }
+    
+    public static IServiceProvider UseRabbitMQPublishing(this IServiceProvider serviceProvider)
+    {
+        var exchangeInitializers = serviceProvider.GetServices<ExchangeInitializer>();
+        try
+        {
+            foreach (var exchangeInitializer in exchangeInitializers)
+                exchangeInitializer.Initialize();
+        } 
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("Failed to initialize exchanges", e);
+        }
+
+        return serviceProvider;
+    }
 }
