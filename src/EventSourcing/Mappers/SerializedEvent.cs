@@ -2,6 +2,6 @@ namespace EventSourcing.Mappers;
 
 public class SerializedEvent : ISerializedEvent
 {
-    public string Type { get; init; }
-    public string Data { get; init; }
+    public required string Type { get; init; }
+    public required string Data { get; init; }
 }

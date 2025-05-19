@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
+using EventSourcing.FunctionTests.Mappers.Events;
+using EventSourcing.FunctionTests.Mappers.Mappers;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using Microsoft.EntityFrameworkCore;

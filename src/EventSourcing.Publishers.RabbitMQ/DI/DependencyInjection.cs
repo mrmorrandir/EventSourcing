@@ -1,11 +1,14 @@
-﻿// ReSharper disable once CheckNamespace
+﻿
+using EventSourcing.Publishers.RabbitMQ;
+using EventSourcing.Publishers.RabbitMQ.DI;
+// ReSharper disable once CheckNamespace
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.Publishers.RabbitMQPublisher;
 
 public static class DependencyInjection
 {
-    public static EventSourcingOptionsBuilder AddRabbitMQPublishing(this EventSourcingOptionsBuilder builder, Action<RabbitMQPublisherOptionsBuilder> options)
+    public static EventSourcingOptionsBuilder AddRabbitMqPublishing(this EventSourcingOptionsBuilder builder, Action<RabbitMQPublisherOptionsBuilder> options)
     {
         builder.Extend(services =>
         {
@@ -17,19 +20,17 @@ public static class DependencyInjection
         return builder;
     }
     
-    public static IServiceProvider UseRabbitMQPublishing(this IServiceProvider serviceProvider)
+    public static async Task UseRabbitMqPublishing(this IServiceProvider serviceProvider)
     {
         var exchangeInitializers = serviceProvider.GetServices<ExchangeInitializer>();
         try
         {
             foreach (var exchangeInitializer in exchangeInitializers)
-                exchangeInitializer.Initialize();
+                await exchangeInitializer.Initialize();
         } 
         catch (Exception e)
         {
             throw new InvalidOperationException("Failed to initialize exchanges", e);
         }
-
-        return serviceProvider;
     }
 }

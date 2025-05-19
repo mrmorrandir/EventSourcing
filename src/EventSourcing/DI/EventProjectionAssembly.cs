@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace EventSourcing.DI;
 
 internal class EventProjectionAssembly
 {

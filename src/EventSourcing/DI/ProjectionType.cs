@@ -1,4 +1,4 @@
-namespace Microsoft.Extensions.DependencyInjection;
+namespace EventSourcing.DI;
 
 internal class ProjectionType
 {

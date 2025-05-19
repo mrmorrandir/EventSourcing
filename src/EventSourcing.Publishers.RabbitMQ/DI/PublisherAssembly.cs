@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace EventSourcing.Publishers.RabbitMQPublisher;
+namespace EventSourcing.Publishers.RabbitMQ.DI;
 
 public class PublisherAssembly
 {

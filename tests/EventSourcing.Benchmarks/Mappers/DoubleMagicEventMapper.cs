@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
+using EventSourcing.Benchmarks.Events;
 using EventSourcing.Mappers;
 
-namespace EventSourcing.Benchmarks;
+namespace EventSourcing.Benchmarks.Mappers;
 
 public class DoubleMagicEventMapper : AbstractEventMapper<DoubleMagicEvent>
 {

@@ -2,17 +2,17 @@ using System.Text;
 using EventSourcing.Mappers;
 using RabbitMQ.Client;
 
-namespace EventSourcing.Publishers.RabbitMQPublisher;
+namespace EventSourcing.Publishers.RabbitMQ;
 
 public class Publisher<TEvent> : IPublisher<TEvent> where TEvent : IEvent
 {
-    private readonly IAsyncConnectionFactory _asyncConnectionFactory;
+    private readonly IConnectionFactory _connectionFactory;
     private readonly IEventRegistry _eventRegistry;
     private readonly string _baseExchangeName;
 
-    public Publisher(IAsyncConnectionFactory asyncConnectionFactory, IEventRegistry eventRegistry, string baseExchangeName)
+    public Publisher(IConnectionFactory connectionFactory, IEventRegistry eventRegistry, string baseExchangeName)
     {
-        _asyncConnectionFactory = asyncConnectionFactory;
+        _connectionFactory = connectionFactory;
         _eventRegistry = eventRegistry;
         _baseExchangeName = baseExchangeName;
     }
@@ -22,22 +22,16 @@ public class Publisher<TEvent> : IPublisher<TEvent> where TEvent : IEvent
         return PublishAsync(@event, cancellationToken);
     }
     
-    public Task PublishAsync(TEvent @event, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(TEvent @event, CancellationToken cancellationToken = default)
     {
-        using var connection = _asyncConnectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
+        await using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
         
-        channel.ExchangeDeclare(_baseExchangeName, ExchangeType.Topic, true, false, null);
+        await channel.ExchangeDeclareAsync(_baseExchangeName, ExchangeType.Topic, true, false, cancellationToken: cancellationToken);
         var serializedEvent = _eventRegistry.Serialize(@event);
 
         var routingKey = serializedEvent.Type.Replace("-", ".");
         var body = Encoding.UTF8.GetBytes(serializedEvent.Data);
-        channel.BasicPublish(
-            _baseExchangeName, 
-            routingKey, 
-            basicProperties: null, 
-            body: body);
-        
-        return Task.CompletedTask;
+        await channel.BasicPublishAsync(_baseExchangeName, routingKey, body, cancellationToken);
     }
 }

@@ -1,4 +1,5 @@
-﻿using EventSourcing.Mappers;
+﻿using EventSourcing.FunctionTests.Mappers.Mappers;
+using EventSourcing.Mappers;
 
 namespace EventSourcing.FunctionTests.Mappers;
 

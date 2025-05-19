@@ -27,16 +27,16 @@ public class PublisherTests : IAsyncLifetime
         RabbitTestEvent? receivedEvent = null;
         var rabbitMqTestEvent = new RabbitTestEvent(Guid.NewGuid(), "Test");
         var serviceProvider = GetServices(exchangeName);
-        serviceProvider.UseRabbitMQPublishing();
+        await serviceProvider.UseRabbitMqPublishing();
         var eventRegistry = serviceProvider.GetRequiredService<IEventRegistry>();
-        var connectionFactory = serviceProvider.GetRequiredService<IAsyncConnectionFactory>();
-        using var connection = connectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
-        channel.ExchangeDeclare(exchangeName, ExchangeType.Topic, true, false, null);
-        channel.QueueDeclare(queueName, false, false, true, null);
-        channel.QueueBind(queueName, exchangeName, "#", null);
+        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        await using var connection = await connectionFactory.CreateConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync();
+        await channel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, null);
+        await channel.QueueDeclareAsync(queueName, false, false, true, null);
+        await channel.QueueBindAsync(queueName, exchangeName, "#", null);
         var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.Received += (sender, eventArgs) =>
+        consumer.ReceivedAsync += (sender, eventArgs) =>
         {
             var json = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
             var type = eventArgs.RoutingKey.Replace(".", "-");
@@ -45,7 +45,7 @@ public class PublisherTests : IAsyncLifetime
             receivedEvent = @event;
             return Task.CompletedTask;
         };
-        channel.BasicConsume(queueName, true, consumer);
+        await channel.BasicConsumeAsync(queueName, true, consumer);
         var publisher = serviceProvider.GetRequiredService<IPublisher<RabbitTestEvent>>();
 
         await publisher.PublishAsync(rabbitMqTestEvent);
@@ -60,14 +60,16 @@ public class PublisherTests : IAsyncLifetime
     {
         const string exchangeName = "testExchange";
         var serviceProvider = GetServices(exchangeName);
-        serviceProvider.UseRabbitMQPublishing();
-        var connectionFactory = serviceProvider.GetRequiredService<IAsyncConnectionFactory>();
-        using var connection = connectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
-        
-        var func = () => channel.ExchangeDeclarePassive(exchangeName);
-        
-        func.Should().NotThrow();
+        await serviceProvider.UseRabbitMqPublishing();
+        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        await using var connection = await connectionFactory.CreateConnectionAsync();
+
+        await using (var channel = await connection.CreateChannelAsync())
+        {
+            var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
+
+            await func.Should().NotThrowAsync();
+        }
     }
     
     [Fact]
@@ -75,13 +77,15 @@ public class PublisherTests : IAsyncLifetime
     {
         const string exchangeName = "testExchange";
         var serviceProvider = GetServices(exchangeName);
-        var connectionFactory = serviceProvider.GetRequiredService<IAsyncConnectionFactory>();
-        using var connection = connectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
-        
-        var func = () => channel.ExchangeDeclarePassive(exchangeName);
-        
-        func.Should().Throw<OperationInterruptedException>();
+        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        await using var connection = await connectionFactory.CreateConnectionAsync();
+
+        await using (var channel = await connection.CreateChannelAsync())
+        {
+            var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
+
+            await func.Should().ThrowAsync<OperationInterruptedException>();
+        }
     }
 
     private ServiceProvider GetServices(string exchangeName)
@@ -92,7 +96,7 @@ public class PublisherTests : IAsyncLifetime
             config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("TestDatabase"));
-            config.AddRabbitMQPublishing(options =>
+            config.AddRabbitMqPublishing(options =>
             {
                 options.UseConnection("localhost", "guest", "guest");
                 options.UseBaseExchangeName(exchangeName);
@@ -106,7 +110,7 @@ public class PublisherTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _rabbitMqContainer = new ContainerBuilder()
-            .WithImage("rabbitmq:3.13-management")
+            .WithImage("rabbitmq:4.1-management")
             .WithPortBinding(5672, 5672)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
             .Build();

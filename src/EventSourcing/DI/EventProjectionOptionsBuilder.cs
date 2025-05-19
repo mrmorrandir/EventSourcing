@@ -1,9 +1,9 @@
 using System.Reflection;
-using EventSourcing;
 using EventSourcing.Projections;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace EventSourcing.DI;
 
 public class EventProjectionOptionsBuilder
 {

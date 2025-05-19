@@ -1,7 +1,9 @@
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
+using EventSourcing.Benchmarks.Events;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.Benchmarks;
@@ -14,7 +16,12 @@ public class EventRegistryBenchmarks
     public EventRegistryBenchmarks()
     {
         var services = new ServiceCollection();
-        services.AddEventSourcing(config => config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly())));
+        services.AddEventSourcing(config =>
+        {
+            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Benchmark"));
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+            config.ConfigureProjections(options => options.AddProjections(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+        });
         var serviceProvider = services.BuildServiceProvider();
         _registry = (EventRegistry)serviceProvider.GetRequiredService<IEventRegistry>();
     }

@@ -1,9 +1,8 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabbitMQ.Client;
 
-namespace EventSourcing.Publishers.RabbitMQPublisher;
+namespace EventSourcing.Publishers.RabbitMQ.DI;
 
 public class RabbitMQPublisherOptionsBuilder
 {
@@ -97,10 +96,9 @@ public class RabbitMQPublisherOptionsBuilder
         {
             HostName = _host,
             UserName = _username,
-            Password = _password,
-            DispatchConsumersAsync = true
+            Password = _password
         };
 
-        _services.AddSingleton<IAsyncConnectionFactory>(connectionFactoryImplementation);
+        _services.AddSingleton<IConnectionFactory>(connectionFactoryImplementation);
     }
 }
