@@ -4,11 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.0.0-preview-20240618.1</Version>
+        <Version>1.0.0</Version>
         <Title>EventSourcing.Publishers</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>
-        <Copyright>2023 @ Andreas Naumann</Copyright>
+        <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>

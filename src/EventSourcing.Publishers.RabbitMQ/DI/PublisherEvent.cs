@@ -1,4 +1,4 @@
-namespace EventSourcing.Publishers.RabbitMQPublisher;
+namespace EventSourcing.Publishers.RabbitMQ.DI;
 
 public class PublisherEvent
 {

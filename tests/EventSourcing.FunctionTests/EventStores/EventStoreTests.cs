@@ -1,6 +1,6 @@
 ﻿using EventSourcing.Stores;
 
-namespace DPS2.Processes.Infrastructure.UnitTests.EventStores;
+namespace EventSourcing.FunctionTests.EventStores;
 
 public abstract class EventStoreTests
 {

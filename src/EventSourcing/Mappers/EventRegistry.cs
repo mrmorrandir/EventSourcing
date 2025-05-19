@@ -4,31 +4,30 @@ namespace EventSourcing.Mappers;
 
 public class EventRegistry : IEventRegistry
 {
-    private readonly IEnumerable<IEventMapper> _eventMappers;
     private readonly ILookup<string, Func<string, string, IEvent>> _deserializerLookup;
     private readonly ILookup<Type, Func<IEvent, ISerializedEvent>> _serializerLookup;
 
     public EventRegistry(IEnumerable<IEventMapper> eventMappers)
     {
-        _eventMappers = eventMappers;
-        // TODO: Check for doublicate "Types" in eventMappers (the string as well as the event type)
-        _serializerLookup = _eventMappers
+        var mappers = eventMappers.ToArray();
+        // TODO: Check for duplicate "Types" in eventMappers (the string as well as the event type)
+        _serializerLookup = mappers
             .ToLookup(
                 eventMapper => eventMapper.EventType, 
                 eventMapper =>
                 {
-                    var serializeMethod = eventMapper.GetType().GetMethod("Serialize")!;
-                    var serializeDelegate = (Func<IEvent, ISerializedEvent>)(@event => (ISerializedEvent)serializeMethod.Invoke(eventMapper, new object[] { @event }));
+                    var serializeMethod = eventMapper.GetType().GetMethod("Serialize");
+                    var serializeDelegate = (Func<IEvent, ISerializedEvent>)(@event => (ISerializedEvent)serializeMethod!.Invoke(eventMapper, [@event])!);
                     return serializeDelegate;
                 });
-        _deserializerLookup = _eventMappers
+        _deserializerLookup = mappers
             .SelectMany(em => em.Types.Select(t => new { Type = t, Mapper = em }))
             .ToLookup(
                 typeAndMapper => typeAndMapper.Type, 
                 typeAndMapper =>
                 {
                     var deserializeMethod = typeAndMapper.Mapper.GetType().GetMethod("Deserialize")!;
-                    var deserializeDelegate = (Func<string, string, IEvent>)((type, data) => (IEvent)deserializeMethod.Invoke(typeAndMapper.Mapper, new object[] { type, data }));
+                    var deserializeDelegate = (Func<string, string, IEvent>)((type, data) => (IEvent)deserializeMethod!.Invoke(typeAndMapper.Mapper, [type, data])!);
                     return deserializeDelegate;
                 });
     }

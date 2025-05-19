@@ -1,6 +1,7 @@
 using System.Reflection;
 using EventSourcing;
 using EventSourcing.Contexts;
+using EventSourcing.DI;
 using EventSourcing.Mappers;
 using EventSourcing.Projections;
 using EventSourcing.Repositories;

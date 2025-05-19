@@ -3,7 +3,7 @@ using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DPS2.Processes.Infrastructure.UnitTests.EventStores;
+namespace EventSourcing.FunctionTests.EventStores;
 
 public class DatabaseEventStoreTests : EventStoreTests
 {

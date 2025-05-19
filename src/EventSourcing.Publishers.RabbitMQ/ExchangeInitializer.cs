@@ -1,23 +1,23 @@
 using RabbitMQ.Client;
 
-namespace EventSourcing.Publishers.RabbitMQPublisher;
+namespace EventSourcing.Publishers.RabbitMQ;
 
 public class ExchangeInitializer
 {
-    private readonly IAsyncConnectionFactory _asyncConnectionFactory;
+    private readonly IConnectionFactory _connectionFactory;
     private readonly string _baseExchangeName;
 
-    public ExchangeInitializer(IAsyncConnectionFactory asyncConnectionFactory, string baseExchangeName)
+    public ExchangeInitializer(IConnectionFactory connectionFactory, string baseExchangeName)
     {
-        _asyncConnectionFactory = asyncConnectionFactory;
+        _connectionFactory = connectionFactory;
         _baseExchangeName = baseExchangeName;
     }
 
-    public void Initialize()
+    public async Task Initialize()
     {
-        using var connection = _asyncConnectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
+        await using var connection = await _connectionFactory.CreateConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync();
         
-        channel.ExchangeDeclare(_baseExchangeName, ExchangeType.Topic, true, false, null);
+        await channel.ExchangeDeclareAsync(_baseExchangeName, ExchangeType.Topic, true, false);
     }
 }

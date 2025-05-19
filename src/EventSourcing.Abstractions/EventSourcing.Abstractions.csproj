@@ -7,20 +7,20 @@
         <Version>1.0.0-beta-2</Version>
         <Title>EventSourcing.Abstractions</Title>
         <Authors>Andreas Naumann</Authors>
-        <Copyright>2023 @ Andreas Naumann</Copyright>
+        <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>1.0.0-preview-20240730.1</PackageVersion>
+        <PackageVersion>1.0.0</PackageVersion>
         <PackageReleaseNotes></PackageReleaseNotes>
         <RootNamespace>EventSourcing</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentResults" Version="3.15.1" />
+      <PackageReference Include="FluentResults" Version="3.16.0" />
     </ItemGroup>
 
 </Project>

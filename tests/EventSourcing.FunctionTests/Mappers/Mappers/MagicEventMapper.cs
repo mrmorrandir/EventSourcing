@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
+using EventSourcing.FunctionTests.Mappers.Events;
 using EventSourcing.Mappers;
 
-namespace EventSourcing.FunctionTests.Mappers;
+namespace EventSourcing.FunctionTests.Mappers.Mappers;
 
 public class MagicEventMapper : AbstractEventMapper<MagicEvent>
 {

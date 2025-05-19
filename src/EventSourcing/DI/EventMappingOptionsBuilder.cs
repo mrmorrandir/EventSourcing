@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using EventSourcing;
+using EventSourcing.DI;
 using EventSourcing.Mappers;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
