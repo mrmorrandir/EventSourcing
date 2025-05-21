@@ -22,10 +22,10 @@ public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TE
 
     public TEvent Deserialize(string type, string data)
     {
-        if (!_deserializers.ContainsKey(type))
+        if (!_deserializers.TryGetValue(type, out var deserializer))
             throw new InvalidOperationException($"Deserializer for type {type} not registered");
         
-        return _deserializers[type].Deserialize(data);
+        return deserializer.Deserialize(data);
     }
 
     /// <summary>
