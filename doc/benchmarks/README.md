@@ -298,3 +298,95 @@ Unknown processor
 The serialization with the switch expression is slightly faster than the dictionary lookup. I don't know if this is just a coincidence or if it is because I got rid of the `(dynamic)` cast. The deserialization is still a dictionary lookup because the type-schemas are not known at compile time.
 
 The creation time is slightly faster, too. This is because only one dictionary is filles instead of two.
+
+### Conclusion
+
+I will use the source generator that creates the `EventRegistry` with switch expressions for the serializers and dictionary lookups for the deserializers. All in all it's faster than the reflection-based version and slightly faster than the dictionary-based version. 
+
+I further added support for mappers and events with the same names in different namespaces. The older source generator was deleted.
+
+The demo project looks like this:
+
+![Demo-Project](image.png)
+
+Where:
+- `Mappers.MyTestEventMapper` is `AbstractEventMapper<Events.MyTestEvent>`
+- `Mappers2.MyTestEventMapper` is `AbstractEventMapper<Events.MyTestEvent2>`
+- `Events2.MyTestEvent` has no mapper and is a `DefaultEventMapper<Events2.MyTestEvent>`
+
+The generated code now looks like this:
+
+```csharp
+using System;
+using System.Collections.Generic;
+using EventSourcing.Mappers;
+using FluentResults;
+
+namespace EventSourcing.Generated
+{
+    public class EventRegistry
+    {
+        private readonly EventSourcing.SourceGenerators.Target.Mappers.MyTestEventMapper _eventSourcingSourceGeneratorsTargetMappersMyTestEventMapper = new();
+        private readonly EventSourcing.SourceGenerators.Target.Mappers2.MyTestEventMapper _eventSourcingSourceGeneratorsTargetMappers2MyTestEventMapper = new();
+        private readonly DefaultEventMapper<EventSourcing.SourceGenerators.Target.Events2.MyTestEvent> _eventSourcingSourceGeneratorsTargetEvents2MyTestEventMapper = new DefaultEventMapper<EventSourcing.SourceGenerators.Target.Events2.MyTestEvent>();
+        private readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();
+
+        public EventRegistry()
+        {
+            foreach (string schema in _eventSourcingSourceGeneratorsTargetMappersMyTestEventMapper.Types)
+                _deserializers.Add(schema, (typeSchema, data) => _eventSourcingSourceGeneratorsTargetMappersMyTestEventMapper.Deserialize(typeSchema, data));
+            foreach (string schema in _eventSourcingSourceGeneratorsTargetMappers2MyTestEventMapper.Types)
+                _deserializers.Add(schema, (typeSchema, data) => _eventSourcingSourceGeneratorsTargetMappers2MyTestEventMapper.Deserialize(typeSchema, data));
+            foreach (string schema in _eventSourcingSourceGeneratorsTargetEvents2MyTestEventMapper.Types)
+                _deserializers.Add(schema, (typeSchema, data) => _eventSourcingSourceGeneratorsTargetEvents2MyTestEventMapper.Deserialize(typeSchema, data));
+        }
+
+        public ISerializedEvent Serialize(IEvent @event)
+        {
+            return @event.GetType() switch
+            {
+                { } type when type == typeof(EventSourcing.SourceGenerators.Target.Events.MyTestEvent) => _eventSourcingSourceGeneratorsTargetMappersMyTestEventMapper.Serialize((EventSourcing.SourceGenerators.Target.Events.MyTestEvent)@event),
+                { } type when type == typeof(EventSourcing.SourceGenerators.Target.Events.MyTestEvent2) => _eventSourcingSourceGeneratorsTargetMappers2MyTestEventMapper.Serialize((EventSourcing.SourceGenerators.Target.Events.MyTestEvent2)@event),
+                { } type when type == typeof(EventSourcing.SourceGenerators.Target.Events2.MyTestEvent) => _eventSourcingSourceGeneratorsTargetEvents2MyTestEventMapper.Serialize((EventSourcing.SourceGenerators.Target.Events2.MyTestEvent)@event),
+                _ => throw new InvalidOperationException($"No serializer found for type {@event.GetType().Name}")
+            };
+        }
+
+        public IEvent Deserialize(string type, string data)
+        {
+            if (!_deserializers.TryGetValue(type, out var deserializer))
+                throw new InvalidOperationException($"No deserializer found for type {type}");
+
+            return deserializer(type, data);
+        }
+    }
+}
+
+```
+
+The generated code is pretty readable (although the fieldNames are a bit long) and the performance is good as stated before.
+
+Benchmarks look like this:
+
+```
+
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.26100.3775)
+Unknown processor
+.NET SDK 9.0.300
+  [Host]     : .NET 8.0.16 (8.0.1625.21506), X64 RyuJIT AVX2 DEBUG
+  DefaultJob : .NET 8.0.16 (8.0.1625.21506), X64 RyuJIT AVX2
+
+
+| Method                                     | Categories      | Mean        | Error     | StdDev    | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|------------------------------------------- |---------------- |------------:|----------:|----------:|------:|--------:|-------:|-------:|----------:|------------:|
+| Create_ReflectingRegistry_SingletonMappers | Creation        |   227.10 ns |  4.340 ns |  3.847 ns |  1.00 |    0.02 | 0.0801 |      - |    1008 B |        1.00 |
+| Create_ReflectingRegistry_TransientMappers | Creation        |   485.73 ns |  9.285 ns | 22.425 ns |  2.14 |    0.10 | 0.1135 |      - |    1424 B |        1.41 |
+| Create_SourceGeneratedRegistry             | Creation        | 1,150.55 ns | 15.390 ns | 14.396 ns |  5.07 |    0.10 | 0.2480 | 0.0019 |    3120 B |        3.10 |
+|                                            |                 |             |           |           |       |         |        |        |           |             |
+| Deserialize_ReflectingRegistry             | Deserialization |   179.50 ns |  2.643 ns |  2.343 ns |  1.00 |    0.02 | 0.0157 |      - |     200 B |        1.00 |
+| Deserialize_SourceGeneratedRegistry        | Deserialization |   133.64 ns |  1.422 ns |  1.187 ns |  0.74 |    0.01 | 0.0126 |      - |     160 B |        0.80 |
+|                                            |                 |             |           |           |       |         |        |        |           |             |
+| Serialize_ReflectingRegistry               | Serialization   |   142.56 ns |  0.949 ns |  0.888 ns |  1.00 |    0.01 | 0.0114 |      - |     144 B |        1.00 |
+| Serialize_SourceGeneratedRegistry          | Serialization   |    99.27 ns |  0.606 ns |  0.567 ns |  0.70 |    0.01 | 0.0088 |      - |     112 B |        0.78 |
+
+```

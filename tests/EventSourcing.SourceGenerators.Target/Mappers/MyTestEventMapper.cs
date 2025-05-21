@@ -7,7 +7,7 @@ public class MyTestEventMapper : AbstractEventMapper<MyTestEvent>
 {
     public MyTestEventMapper()
     {
-        WillSerialize("my-test-event-v1");
-        CanDeserialize("my-test-event-v1");
+        WillSerialize("my-magic-test-event-v1");
+        CanDeserialize("my-magic-test-event-v1");
     }
 }

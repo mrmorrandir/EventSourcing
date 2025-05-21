@@ -144,7 +144,7 @@ public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
         sourceBuilder.AppendLine();
         sourceBuilder.AppendLine("namespace EventSourcing.Generated");
         sourceBuilder.AppendLine("{");
-        sourceBuilder.AppendLine("    public class EventRegistry2");
+        sourceBuilder.AppendLine("    public class EventRegistry");
         sourceBuilder.AppendLine("    {");
 
         foreach (var mapperInfo in mapperInfos)
@@ -159,7 +159,7 @@ public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
 
         sourceBuilder.AppendLine("        private readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();");
         sourceBuilder.AppendLine();
-        sourceBuilder.AppendLine("        public EventRegistry2()");
+        sourceBuilder.AppendLine("        public EventRegistry()");
         sourceBuilder.AppendLine("        {");
         foreach (var mapperInfo in mapperInfos)
         {
@@ -204,7 +204,7 @@ public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
         sourceBuilder.AppendLine("}");
 
         // Add the generated source to the context
-        productionContext.AddSource("EventRegistry2.g.cs", sourceBuilder.ToString());
+        productionContext.AddSource("EventRegistry.g.cs", sourceBuilder.ToString());
     }
 }
 

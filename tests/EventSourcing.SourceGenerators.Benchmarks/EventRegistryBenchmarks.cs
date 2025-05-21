@@ -16,14 +16,12 @@ public class EventRegistryBenchmarks
 {
     private readonly EventSourcing.Mappers.EventRegistry _reflectingRegistry;
     private readonly EventSourcing.Generated.EventRegistry _sourceGeneratedRegistry;
-    private readonly EventSourcing.Generated.EventRegistry2 _sourceGeneratedRegistry2;
     private readonly IEnumerable<IEventMapper> _eventMappers = [new MyTestEventMapper()];
     
     public EventRegistryBenchmarks()
     {
         _reflectingRegistry = new EventRegistry([new MyTestEventMapper()]);
         _sourceGeneratedRegistry = new EventSourcing.Generated.EventRegistry();
-        _sourceGeneratedRegistry2 = new EventSourcing.Generated.EventRegistry2();
     }
     
     [BenchmarkCategory("Creation"), Benchmark(Baseline = true)]
@@ -44,12 +42,6 @@ public class EventRegistryBenchmarks
         _ = new EventSourcing.Generated.EventRegistry();
     }
     
-    [BenchmarkCategory("Creation"), Benchmark]
-    public void Create_SourceGeneratedRegistry2()
-    {
-        _ = new EventSourcing.Generated.EventRegistry2();
-    }
-    
     [BenchmarkCategory("Serialization"), Benchmark(Baseline = true)]
     public void Serialize_ReflectingRegistry()
     {
@@ -64,19 +56,12 @@ public class EventRegistryBenchmarks
         _ = _sourceGeneratedRegistry.Serialize(myTestEvent);
     }
     
-    [BenchmarkCategory("Serialization"), Benchmark]
-    public void Serialize_SourceGeneratedRegistry2_SwitchCase()
-    {
-        var myTestEvent = new MyTestEvent("Test");
-        _ = _sourceGeneratedRegistry2.Serialize(myTestEvent);
-    }
-    
     [BenchmarkCategory("Deserialization"), Benchmark(Baseline = true)]
     public void Deserialize_ReflectingRegistry()
     {
         var data = new SerializedEvent
         {
-            Type = "my-test-event-v1",
+            Type = "my-magic-test-event-v1",
             Data = "{\"Test\":\"Test\"}"
         };
         _ = _reflectingRegistry.Deserialize(data.Type, data.Data);
@@ -87,21 +72,9 @@ public class EventRegistryBenchmarks
     {
         var data = new SerializedEvent
         {
-            Type = "my-test-event-v1",
+            Type = "my-magic-test-event-v1",
             Data = "{\"Test\":\"Test\"}"
         };
         _ = _sourceGeneratedRegistry.Deserialize(data.Type, data.Data);
     }
-    
-    [BenchmarkCategory("Deserialization"), Benchmark]
-    public void Deserialize_SourceGeneratedRegistry2()
-    {
-        var data = new SerializedEvent
-        {
-            Type = "my-test-event-v1",
-            Data = "{\"Test\":\"Test\"}"
-        };
-        _ = _sourceGeneratedRegistry2.Deserialize(data.Type, data.Data);
-    }
-    
 }

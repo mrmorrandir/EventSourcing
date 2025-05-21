@@ -3,11 +3,11 @@ using EventSourcing.SourceGenerators.Target.Events;
 
 namespace EventSourcing.SourceGenerators.Target.Mappers2;
 
-public class MyTestEventMapper : AbstractEventMapper<MyTestEvent>
+public class MyTestEventMapper : AbstractEventMapper<MyTestEvent2>
 {
     public MyTestEventMapper()
     {
-        WillSerialize("my-test-event-v1");
-        CanDeserialize("my-test-event-v1");
+        WillSerialize("my-magic-test-event-2-v1");
+        CanDeserialize("my-magic-test-event-2-v1");
     }
 }
