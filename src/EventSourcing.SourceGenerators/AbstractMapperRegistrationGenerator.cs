@@ -73,6 +73,13 @@ public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
                 {
                     Fullname = $"{namespaceName}.{classDeclaration.Identifier.Text}",
                     Name = $"{classDeclaration.Identifier.Text}",
+                    // Get the generic type argument for the first generic parameter
+                    Event = classDeclaration.BaseList?.Types
+                        .FirstOrDefault(baseTypeSyntax => baseTypeSyntax.ToString().Contains("AbstractEventMapper"))?
+                        .ToString()
+                        .Split('<')[1]
+                        .Split('>')[0]
+                        .Trim()
                 };
             })
             .ToList();
@@ -134,6 +141,10 @@ public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
         mapperNumber = 1;
         foreach (var eventClass in eventClassFullNames)
         {
+            // Check if the event class is already handled by an abstract mapper
+            if (mapperClassFullNames.Any(x => x.Event == eventClass.Name))
+                continue;
+            
             sourceBuilder.AppendLine($"            if (!_serializers.ContainsKey(typeof({eventClass.Fullname})))");
             sourceBuilder.AppendLine($"            {{");
             sourceBuilder.AppendLine($"                var mapper{mapperNumber} = new DefaultEventMapper<{eventClass.Fullname}>();");
