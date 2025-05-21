@@ -1,6 +1,7 @@
 ﻿using EventSourcing.Mappers;
+using EventSourcing.SourceGenerators.Target.Events;
 
-namespace EventSourcing.SourceGenerators.Target;
+namespace EventSourcing.SourceGenerators.Target.Mappers;
 
 public class MyTestEventMapper : AbstractEventMapper<MyTestEvent>
 {
