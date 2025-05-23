@@ -36,41 +36,47 @@ public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TE
     /// </para>
     /// </summary>
     /// <param name="serializer">The serializer to be used</param>
+    /// <param name="overwrite">When set to true, the serializer will be overwritten and not exception will be thrown</param>
     /// <exception cref="InvalidOperationException">When serializer is already registered</exception>
-    protected void WillSerialize(IEventSerializer<TEvent> serializer)
+    protected void WillSerialize(IEventSerializer<TEvent> serializer, bool overwrite = false)
     {
-        if (_serializer != null)
-            throw new InvalidOperationException($"Serializer for type {serializer.Type} already registered");
+        if (_serializer != null && !overwrite)
+            throw new InvalidOperationException($"A serializer is already registered for type {_serializer.Type}");
         if (!TypeRegex.IsMatch(serializer.Type))
             throw new ArgumentException($"Serializer type {serializer.Type} must be in kebab case with a version number in the end", nameof(serializer));
         
         _serializer = serializer;
     }
-    
+
     /// <summary>
     /// Configures a default json serializer for the specified type. Only one serializer can be registered per instance.
     /// </summary>
     /// <param name="type">The type name to be used</param>
-    protected void WillSerialize(string type)
+    /// <param name="overwrite">When set to true, the serializer will be overwritten and not exception will be thrown</param>
+    protected void WillSerialize(string type, bool overwrite = false)
     {
         if (!TypeRegex.IsMatch(type))
             throw new ArgumentException($"Serializer type {type} must be in kebab case with a version number in the end", nameof(type));
-        WillSerialize(new EventSerializer<TEvent>(type));
+        WillSerialize(new EventSerializer<TEvent>(type), overwrite);
     }
 
     /// <summary>
-    /// Configures a deserializer for a specific type. Multiple deserializers can be registered per instance.
+    /// Configures a deserializer for a specific schema. Multiple deserializers can be registered per instance.
     /// <para>
     /// The multiple deserializers are used to support versioning of events. When a new version of an event is created,
     /// a new deserializer can be registered for the new type name. The old deserializer can be kept for backwards compatibility.
     /// </para>
     /// </summary>
-    /// <param name="type">The type name to be used</param>
+    /// <param name="schema">The schema to be used</param>
     /// <param name="deserializer">The deserializer to be used</param>
-    protected void CanDeserialize(string type, IEventDeserializer<TEvent> deserializer)
+    /// <param name="overwrite">When set to true, the deserializer will be overwritten (if it exists)</param>
+    protected void CanDeserialize(string schema, IEventDeserializer<TEvent> deserializer, bool overwrite = false)
     {
-        _deserializers.Add(type, deserializer);
-        _types.Add(type);
+        if (_deserializers.ContainsKey(schema) && !overwrite)
+            throw new InvalidOperationException($"A deserializer is already registered for type {schema}");
+        _deserializers.Remove(schema);
+        _deserializers.Add(schema, deserializer);
+        _types.Add(schema);
     }
     
     /// <summary>
@@ -80,22 +86,25 @@ public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TE
     /// a new deserializer can be registered for the new type name. The old deserializer can be kept for backwards compatibility.
     /// </para>
     /// </summary>
-    /// <param name="type">The type name to be used</param>
+    /// <param name="schema">The type name to be used</param>
     /// <param name="deserializer">The deserializer function to be used</param>
-    protected void CanDeserialize(string type, Func<string, JsonSerializerOptions, TEvent> deserializer)
+    /// /// <param name="overwrite">When set to true, the deserializer will be overwritten (if it exists)</param>
+    protected void CanDeserialize(string schema, Func<string, JsonSerializerOptions, TEvent> deserializer, bool overwrite = false)
     {
-        CanDeserialize(type, new EventDeserializer<TEvent>(deserializer));
+        CanDeserialize(schema, new EventDeserializer<TEvent>(deserializer), overwrite);
     }
 
+    /// <summary>
     /// Configures a default json deserializer for a specific type. Multiple deserializers can be registered per instance.
     /// <para>
     /// The multiple deserializers are used to support versioning of events. When a new version of an event is created,
     /// a new deserializer can be registered for the new type name. The old deserializer can be kept for backwards compatibility.
     /// </para>
     /// </summary>
-    /// <param name="type">The type name to be used</param>
-    protected void CanDeserialize(string type)
+    /// <param name="schema">The type name to be used</param>
+    /// /// <param name="overwrite">When set to true, the deserializer will be overwritten (if it exists)</param>
+    protected void CanDeserialize(string schema, bool overwrite = false)
     {
-        CanDeserialize(type, new EventDeserializer<TEvent>());
+        CanDeserialize(schema, new EventDeserializer<TEvent>(), overwrite);
     }
 }

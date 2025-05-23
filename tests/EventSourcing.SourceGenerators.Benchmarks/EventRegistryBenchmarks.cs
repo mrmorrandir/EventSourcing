@@ -23,7 +23,7 @@ public class EventRegistryBenchmarks
     [BenchmarkCategory("Serialization"), Benchmark]
     public void Serialize_SourceGeneratedRegistry()
     {
-        var myTestEvent = new MyTestEvent("Test");
+        var myTestEvent = new MyTestEvent("Test", DateTimeOffset.Now);
         _ = _sourceGeneratedRegistry.Serialize(myTestEvent);
     }
     
@@ -33,7 +33,7 @@ public class EventRegistryBenchmarks
         var data = new SerializedEvent
         {
             Type = "my-magic-test-event-v1",
-            Data = "{\"Test\":\"Test\"}"
+            Data = "{\"Value\":\"Test\"}"
         };
         _ = _sourceGeneratedRegistry.Deserialize(data.Type, data.Data);
     }

@@ -6,8 +6,8 @@ namespace EventSourcing.Benchmarks.Mappers;
 
 public class DoubleMagicEventMapper : AbstractEventMapper<DoubleMagicEvent>
 {
-    public record DoubleMagicEventV1(Guid Id, DateTime Created) : IEvent;
-    public record DoubleMagicEventV2(Guid Id, string MagicSpell, DateTime Created) : IEvent;
+    public record DoubleMagicEventV1(Guid Id, DateTime Created);
+    public record DoubleMagicEventV2(Guid Id, string MagicSpell, DateTime Created);
     
     public DoubleMagicEventMapper()
     {

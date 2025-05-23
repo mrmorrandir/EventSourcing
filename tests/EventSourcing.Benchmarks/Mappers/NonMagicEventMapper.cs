@@ -6,8 +6,8 @@ namespace EventSourcing.Benchmarks.Mappers;
 
 public class NonMagicEventMapper : AbstractEventMapper<NonMagicEvent>
 {
-    public record NonMagicEventV1(Guid Id, DateTime Created) : IEvent;
-    public record NonMagicEventV2(Guid Id, string MagicSpell, DateTime Created) : IEvent;
+    public record NonMagicEventV1(Guid Id, DateTime Created);
+    public record NonMagicEventV2(Guid Id, string MagicSpell, DateTime Created);
     
     public NonMagicEventMapper()
     {

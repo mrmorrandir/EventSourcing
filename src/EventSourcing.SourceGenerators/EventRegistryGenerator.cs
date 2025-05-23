@@ -232,7 +232,3 @@ public class EventRegistryGenerator : IIncrementalGenerator
         productionContext.AddSource("EventRegistry.g.cs", sourceBuilder.ToString());
     }
 }
-
-public record MapperInfo(string Namespace, string FullName, string Name, string EventFullName, string EventName, string FieldName);
-
-public record EventInfo(string Namespace, string FullName, string Name, string FieldName);
