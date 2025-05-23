@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace EventSourcing.SourceGenerators;
 
 [Generator]
-public class AbstractMapperRegistrationGenerator : IIncrementalGenerator
+public class EventRegistryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
