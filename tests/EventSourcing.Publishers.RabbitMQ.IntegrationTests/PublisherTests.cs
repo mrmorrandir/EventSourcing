@@ -93,7 +93,7 @@ public class PublisherTests : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddEventSourcing(config =>
         {
-            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("TestDatabase"));
             config.AddRabbitMqPublishing(options =>

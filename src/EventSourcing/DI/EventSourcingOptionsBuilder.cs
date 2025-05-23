@@ -99,9 +99,6 @@ public class EventSourcingOptionsBuilder
         _services.AddScoped<IEventStore, EventStore>();
         _services.AddScoped<IEventRepository, EventRepository>();
         _services.AddTransient<IEventBus, EventBus>();
-
-        if (!_projectionsConfigured)
-            _eventProjectionOptionsBuilder.AddProjections();
         
         var eventMappingOptions = _eventMappingOptionsBuilder.Build();
         foreach (var service in eventMappingOptions.Services)

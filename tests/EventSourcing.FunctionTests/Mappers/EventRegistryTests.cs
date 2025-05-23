@@ -1,13 +1,9 @@
 using System.Reflection;
-using System.Text.Json;
 using EventSourcing.FunctionTests.Mappers.Events;
 using EventSourcing.FunctionTests.Mappers.Mappers;
 using EventSourcing.Mappers;
-using EventSourcing.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using JsonConverter = System.Text.Json.Serialization.JsonConverter;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace EventSourcing.FunctionTests.Mappers;
@@ -21,16 +17,16 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
 
-        services.Should().ContainSingle(s => s.ImplementationType == typeof(MagicEventMapper));
+        services.Should().ContainSingle(x => x.ServiceType == typeof(IEventRegistry));
         
         var serviceProvider = services.BuildServiceProvider();
 
-        var mappers = serviceProvider.GetServices<IEventMapper>();
-        mappers.Should().ContainSingle(s => s.GetType() == typeof(MagicEventMapper));
+        var registry = serviceProvider.GetServices<IEventRegistry>();
+        registry.Should().NotBeNull();
     }
 
     [Fact]
@@ -40,7 +36,7 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
         var serviceProvider = services.BuildServiceProvider();
@@ -66,12 +62,12 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
-        var magicEventV2 = new MagicEventMapper.MagicEventV2(Guid.NewGuid(), "Magic", DateTime.UtcNow);
+        var magicEventV2 = new MagicEventV2(Guid.NewGuid(), "Magic", DateTime.UtcNow);
 
         var serialized = JsonSerializer.Serialize(magicEventV2, EventSerializerOptions.Default);
         
@@ -89,12 +85,12 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
-        var magicEventV1 = new MagicEventMapper.MagicEventV1(Guid.NewGuid(), DateTime.UtcNow);
+        var magicEventV1 = new MagicEventV1(Guid.NewGuid(), DateTime.UtcNow);
 
         var serialized = JsonSerializer.Serialize(magicEventV1, EventSerializerOptions.Default);
         
@@ -112,7 +108,7 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
         var serviceProvider = services.BuildServiceProvider();
@@ -122,7 +118,7 @@ public class EventRegistryTests
 
         var func = () => (MagicEvent) registry.Deserialize("magic-event-vUNKOWN", serialized);
 
-        func.Should().Throw<EventRegistryException>().WithMessage("*not found*");
+        func.Should().Throw<EventRegistryException>().WithMessage("*no deserializer found*");
     }
     
     [Fact]
@@ -132,14 +128,15 @@ public class EventRegistryTests
         services.AddEventSourcing(config =>
         {
             config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("Test"));
-            config.ConfigureMapping(options => options.AddMapper<MagicEventMapper>());
+            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
             config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
         });
         var serviceProvider = services.BuildServiceProvider();
         var registry = serviceProvider.GetRequiredService<IEventRegistry>();
 
-        var func = () => (MagicEvent)registry.Serialize(new UnknownEvent(Guid.NewGuid(), "This should be unknown"));
+        // This UnknownEvent is not registered in the registry because it is not in the assembly
+        var func = () => registry.Serialize(new EventSourcing.UnitTests.Events.UnknownEvent(Guid.Empty, "Unknown"));
 
-        func.Should().Throw<EventRegistryException>().WithMessage("*not found*");
+        func.Should().Throw<EventRegistryException>().WithMessage("*no serializer found*");
     }
 }

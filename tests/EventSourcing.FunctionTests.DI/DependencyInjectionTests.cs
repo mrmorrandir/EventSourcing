@@ -58,7 +58,7 @@ public class DependencyInjectionTests
         var func = () => services.AddEventSourcing(options =>
         {
             options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
-            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly, false));
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly));
             options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
         });
 
@@ -73,7 +73,7 @@ public class DependencyInjectionTests
         var func = () => services.AddEventSourcing(options =>
         {
             options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
-            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly, false).IgnoreUncoveredEvents());
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly2.Events.DefaultEvent).Assembly));
             options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()).IgnoreUncoveredEvents());
         });
 
@@ -88,7 +88,7 @@ public class DependencyInjectionTests
         var func = () => services.AddEventSourcing(options =>
         {
             options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
-            options.ConfigureMapping(mappingOptions => mappingOptions.AddMapper<DefaultEventMapper<InvalidAssembly.Events.DefaultEvent>>());
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly.Events.DefaultEvent).Assembly));
             options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(Assembly.GetExecutingAssembly()));
         });
 
@@ -103,7 +103,7 @@ public class DependencyInjectionTests
         var func = () => services.AddEventSourcing(options =>
         {
             options.ConfigureEventStoreDbContext(dbOptions => dbOptions.UseInMemoryDatabase("Test"));
-            options.ConfigureMapping(mappingOptions => mappingOptions.AddMapper<DefaultEventMapper<InvalidAssembly.Events.DefaultEvent>>());
+            options.ConfigureMapping(mappingOptions => mappingOptions.AddMappers(typeof(InvalidAssembly.Events.DefaultEvent).Assembly));
             options.ConfigureProjections(projectionOptions => projectionOptions.AddProjections(typeof(InvalidAssembly.Events.DefaultEvent).Assembly).IgnoreUncoveredEvents());
         });
 

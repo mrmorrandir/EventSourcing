@@ -9,12 +9,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AwesomeAssertions" Version="8.2.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="AwesomeAssertions" Version="8.2.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>
+        <PackageReference Include="xunit" Version="2.9.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
@@ -26,7 +26,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\EventSourcing\EventSourcing.csproj" />
+        <ProjectReference Include="..\..\EventSourcing.UnitTests\EventSourcing.UnitTests.csproj" />
+        <ProjectReference Include="..\..\src\EventSourcing.SourceGenerators\EventSourcing.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\src\EventSourcing\EventSourcing.csproj"/>
     </ItemGroup>
 
 </Project>

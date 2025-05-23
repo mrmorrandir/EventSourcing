@@ -1,5 +1,6 @@
+using System.Collections.Immutable;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.DI;
 
-public record EventMappingOptions(IServiceCollection Services, IEnumerable<Type> CoveredEvents, IEnumerable<Type>? UncoveredEvents = null);
+public record EventMappingOptions(IServiceCollection Services, ImmutableArray<Type> CoveredEvents);

@@ -3,5 +3,5 @@
 public interface IEventRegistry 
 {
     ISerializedEvent Serialize(IEvent @event);
-    IEvent Deserialize(string type, string data);
+    IEvent Deserialize(string schema, string data);
 }

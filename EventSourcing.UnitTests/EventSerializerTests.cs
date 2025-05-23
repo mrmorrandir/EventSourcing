@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
-using EventSourcing.FunctionTests.Mappers.Events;
 using EventSourcing.Mappers;
+using EventSourcing.UnitTests.Events;
 
-namespace EventSourcing.FunctionTests.Mappers;
+namespace EventSourcing.UnitTests;
 
 public class EventSerializerTests
 {
