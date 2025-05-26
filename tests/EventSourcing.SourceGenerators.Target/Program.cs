@@ -1,4 +1,5 @@
-﻿using EventSourcing.SourceGenerators.Target.Aggregates;
+﻿using EventSourcing.Abstractions;
+using EventSourcing.SourceGenerators.Target.Aggregates;
 using EventSourcing.SourceGenerators.Target.Aggregates.Generated;
 using EventSourcing.SourceGenerators.Target.Events;
 
@@ -28,14 +29,17 @@ public class Program
         Console.WriteLine();
 
         var id = Guid.NewGuid();
-        var createEvent = new CreatedEvent(id, "Test", DateTimeOffset.Now);
-        var changedEvent = new ChangedEvent(id, "Magic", DateTimeOffset.Now.AddMinutes(1));
-        var changedEvent2 = new ChangedEvent(id, "SomeMagic", DateTimeOffset.Now.AddMinutes(2));
-        var myEvents = new List<object>
+        var createEvent = new CreatedEvent(id, "Test-Name", "Test-Description", DateTimeOffset.Now);
+        var changedEvent = new ChangedNameEvent(id, "Magic", DateTimeOffset.Now.AddMinutes(1));
+        var changedEvent2 = new ChangedNameEvent(id, "SomeMagic", DateTimeOffset.Now.AddMinutes(2));
+        var changedEvent3 = new ChangedDescriptionEvent(id, "What is this here?", DateTimeOffset.Now.AddMinutes(3));
+        
+        var myEvents = new List<IAggregateEvent>
         {
             createEvent,
             changedEvent,
-            changedEvent2
+            changedEvent2,
+            changedEvent3
         };
 
         MyTestAggregate? state = null;
@@ -45,11 +49,19 @@ public class Program
             if (++version == 1)
             {
                 state = MyTestAggregateDispatcher.CreateFromEvent(@event);
+                Console.WriteLine($"Created state from event: {state}");
                 continue;
             }
             state = MyTestAggregateDispatcher.ApplyEvent(state, @event);
+            Console.WriteLine($"Applied event: {@event.GetType().Name} with data {@event} => {state}");
         }
         
         Console.WriteLine($"State (CurrentVersion: {version}): {state}");
+        Console.WriteLine();
+        
+        var repository = new MyTestAggregateRepository();
+        var state2 = repository.SaveAndGet(id, myEvents);
+        
+        Console.WriteLine($"State from repository: {state2}");
     }
 }
