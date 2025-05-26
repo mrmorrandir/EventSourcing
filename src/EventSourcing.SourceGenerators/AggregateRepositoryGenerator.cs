@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace EventSourcing.SourceGenerators;
 
-[Generator]
+//[Generator]
 public class AggregateRepositoryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -20,21 +20,6 @@ public class AggregateRepositoryGenerator : IIncrementalGenerator
         {
             var source = GenerateRepository(info!);
             spc.AddSource($"{info!.AggregateName}Repository.g.cs", SourceText.From(source, Encoding.UTF8));
-        });
-
-        context.RegisterPostInitializationOutput(ctx =>
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("namespace EventSourcing.Abstractions");
-            sb.AppendLine("{");
-            sb.AppendLine("    public interface IAggregateRepository<out TAggregate> where TAggregate : IAggregate");
-            sb.AppendLine("    {");
-            sb.AppendLine("        TAggregate Get(Guid id);");
-            sb.AppendLine("        void Save(Guid id, IEnumerable<IAggregateEvent> events);");
-            sb.AppendLine("        TAggregate SaveAndGet(Guid id, IEnumerable<IAggregateEvent> events);");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-            ctx.AddSource("IAggregateRepository.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         });
     }
     private static bool IsRepositoryCandidate(SyntaxNode node)
@@ -66,7 +51,7 @@ public class AggregateRepositoryGenerator : IIncrementalGenerator
         // Find IAggregateRepository<T>
         var repoInterface = classSymbol.AllInterfaces
             .FirstOrDefault(i =>
-                i.OriginalDefinition.ToDisplayString() == "EventSourcing.Abstractions.IAggregateRepository<TAggregate>");
+                i.OriginalDefinition.ToDisplayString() == "EventSourcing.Repositories.IAggregateRepository<TAggregate>");
 
         if (repoInterface == null)
             return null;
@@ -119,7 +104,9 @@ public class AggregateRepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Linq;");
-        sb.AppendLine("using EventSourcing.Abstractions;");
+        sb.AppendLine("using EventSourcing;");
+        sb.AppendLine("using EventSourcing.Repositories;");
+        sb.AppendLine();
         sb.AppendLine($"using {info.Namespace};");
         sb.AppendLine();
         sb.AppendLine($"namespace {info.RepositoryNamespace}");
@@ -142,7 +129,7 @@ public class AggregateRepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("            return aggregate ?? throw new InvalidOperationException($\"No events found for aggregate with ID {id}.\");");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine("        public void Save(Guid id, IEnumerable<IAggregateEvent> events)");
+        sb.AppendLine("        public void Save(Guid id, IEnumerable<IEvent> events)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (!_streams.ContainsKey(id))");
         sb.AppendLine("                _streams[id] = [];");
@@ -150,7 +137,7 @@ public class AggregateRepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("                _streams[id].Add(evt);");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine($"        public {info.AggregateName} SaveAndGet(Guid id, IEnumerable<IAggregateEvent> events)");
+        sb.AppendLine($"        public {info.AggregateName} SaveAndGet(Guid id, IEnumerable<IEvent> events)");
         sb.AppendLine("        {");
         sb.AppendLine("            Save(id, events);");
         sb.AppendLine("            return Get(id);");

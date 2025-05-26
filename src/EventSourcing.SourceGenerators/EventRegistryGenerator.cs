@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EventSourcing.SourceGenerators;
 
-[Generator]
+//[Generator]
 public class EventRegistryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -142,7 +142,7 @@ public class EventRegistryGenerator : IIncrementalGenerator
         sourceBuilder.AppendLine("using EventSourcing.Mappers;");
         sourceBuilder.AppendLine("using FluentResults;");
         sourceBuilder.AppendLine();
-        sourceBuilder.AppendLine("namespace EventSourcing.Generated");
+        sourceBuilder.AppendLine("namespace EventSourcing.Mappers");
         sourceBuilder.AppendLine("{");
         sourceBuilder.AppendLine("    /// <summary>");
         sourceBuilder.AppendLine("    /// <para>");

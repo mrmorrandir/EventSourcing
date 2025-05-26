@@ -1,4 +1,4 @@
-﻿using EventSourcing.Abstractions;
+﻿using EventSourcing.Repositories;
 using EventSourcing.SourceGenerators.Target.Aggregates;
 
 namespace EventSourcing.SourceGenerators.Target.Repositories;

@@ -39,8 +39,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerators.Target", "tests\EventSourcing.SourceGenerators.Target\EventSourcing.SourceGenerators.Target.csproj", "{DAAB9237-7142-4FC3-8000-7660C09E2266}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerators.Benchmarks", "tests\EventSourcing.SourceGenerators.Benchmarks\EventSourcing.SourceGenerators.Benchmarks.csproj", "{4C39826D-DB44-447D-B517-CB0305147622}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.UnitTests", "EventSourcing.UnitTests\EventSourcing.UnitTests.csproj", "{DAEDB335-81D1-41E2-B821-4B811E538DF6}"
 EndProject
 Global
@@ -62,7 +60,6 @@ Global
 		{C22EB0A7-8E28-483C-B1E9-0976AFDE6CAA} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 		{D68C857D-BF25-4B1D-8DCC-DCA16A62AF1A} = {67DD84CE-514A-46BA-B3DA-DF94C2844C76}
 		{DAAB9237-7142-4FC3-8000-7660C09E2266} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
-		{4C39826D-DB44-447D-B517-CB0305147622} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 		{DAEDB335-81D1-41E2-B821-4B811E538DF6} = {BEF73379-0EFB-4DF2-B8C0-F0B9A5AD17BF}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -118,10 +115,6 @@ Global
 		{DAAB9237-7142-4FC3-8000-7660C09E2266}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAAB9237-7142-4FC3-8000-7660C09E2266}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAAB9237-7142-4FC3-8000-7660C09E2266}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C39826D-DB44-447D-B517-CB0305147622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C39826D-DB44-447D-B517-CB0305147622}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C39826D-DB44-447D-B517-CB0305147622}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C39826D-DB44-447D-B517-CB0305147622}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DAEDB335-81D1-41E2-B821-4B811E538DF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DAEDB335-81D1-41E2-B821-4B811E538DF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAEDB335-81D1-41E2-B821-4B811E538DF6}.Release|Any CPU.ActiveCfg = Release|Any CPU

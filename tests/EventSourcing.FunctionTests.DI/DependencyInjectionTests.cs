@@ -26,8 +26,8 @@ public class DependencyInjectionTests
         var projections = provider.GetRequiredService<IEnumerable<IEventHandler>>().Select(s => (IEventHandler)s).ToList();
         var eventRepository = provider.GetRequiredService<IEventRepository>();
         
-        eventMappers.Should().ContainSingle(m => m.Types.Contains("my-custom-event-v1") && m.EventType == typeof(ValidAssembly.Events.CustomEvent));
-        eventMappers.Should().ContainSingle(m => m.Types.Contains("default-event-v1") && m.EventType == typeof(ValidAssembly.Events.DefaultEvent));
+        eventMappers.Should().ContainSingle(m => m.Schemas.Contains("my-custom-event-v1") && m.EventType == typeof(ValidAssembly.Events.CustomEvent));
+        eventMappers.Should().ContainSingle(m => m.Schemas.Contains("default-event-v1") && m.EventType == typeof(ValidAssembly.Events.DefaultEvent));
         eventMappers.Should().HaveCount(2);
         
         projections.Should().Contain(p => p.GetType() == typeof(ValidAssembly.Projections.CustomEventProjection));

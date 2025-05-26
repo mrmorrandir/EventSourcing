@@ -6,4 +6,4 @@ var config = ManualConfig
     .CreateMinimumViable()
     .WithOptions(ConfigOptions.DisableOptimizationsValidator);
 
-BenchmarkRunner.Run<EventRegistryBenchmarks>(config);
+BenchmarkRunner.Run<MapperBenchmarks>(config);

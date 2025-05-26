@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EventSourcing.SourceGenerators;
 
-[Generator]
+//[Generator]
 public partial class EventMapperGenerator : IIncrementalGenerator
 {
     [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*-v[0-9]+$")]
@@ -117,22 +117,22 @@ public partial class EventMapperGenerator : IIncrementalGenerator
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using EventSourcing.Mappers;");
+            sb.AppendLine();
             sb.AppendLine($"using {eventInfo.Namespace};");
             sb.AppendLine();
-            sb.AppendLine($"namespace {eventInfo.Namespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"   public partial class {eventInfo.Name}Mapper : AbstractEventMapper<{eventInfo.Name}>");
-            sb.AppendLine( "    {");
-            sb.AppendLine($"        public {eventInfo.Name}Mapper()");
-            sb.AppendLine( "        {");
-            sb.AppendLine($"            WillSerialize(\"{eventInfo.KebabCaseName}\");");
-            sb.AppendLine($"            CanDeserialize(\"{eventInfo.KebabCaseName}\");");
-            sb.AppendLine($"            Configure();");
-            sb.AppendLine( "        }");
+            sb.AppendLine($"namespace {eventInfo.Namespace};");
             sb.AppendLine();
-            sb.AppendLine($"        partial void Configure();");
+            sb.AppendLine($"public partial class {eventInfo.Name}Mapper : AbstractEventMapper<{eventInfo.Name}>");
+            sb.AppendLine( "{");
+            sb.AppendLine($"    public {eventInfo.Name}Mapper()");
+            sb.AppendLine( "    {");
+            sb.AppendLine($"        WillSerialize(\"{eventInfo.KebabCaseName}\");");
+            sb.AppendLine($"        CanDeserialize(\"{eventInfo.KebabCaseName}\");");
+            sb.AppendLine($"        Configure();");
             sb.AppendLine( "    }");
-            sb.AppendLine("}");
+            sb.AppendLine();
+            sb.AppendLine($"    partial void Configure();");
+            sb.AppendLine( "}");
             productionContext.AddSource($"{eventInfo.Namespace}.{eventInfo.Name}Mapper.g.cs", sb.ToString());
             
         }

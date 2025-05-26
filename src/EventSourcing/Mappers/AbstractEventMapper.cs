@@ -9,7 +9,7 @@ public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TE
     private readonly Dictionary<string, IEventDeserializer<TEvent>> _deserializers = new();
     private IEventSerializer<TEvent> _serializer = null!;
 
-    public IEnumerable<string> Types => _types;
+    public IEnumerable<string> Schemas => _types;
     public Type EventType => typeof(TEvent);
 
     public ISerializedEvent Serialize(TEvent @event)
@@ -20,10 +20,10 @@ public abstract class AbstractEventMapper<TEvent> : EventMapper, IEventMapper<TE
         return _serializer.Serialize(@event);
     }
 
-    public TEvent Deserialize(string type, string data)
+    public TEvent Deserialize(string schema, string data)
     {
-        if (!_deserializers.TryGetValue(type, out var deserializer))
-            throw new InvalidOperationException($"Deserializer for type {type} not registered");
+        if (!_deserializers.TryGetValue(schema, out var deserializer))
+            throw new InvalidOperationException($"Deserializer for type {schema} not registered");
         
         return deserializer.Deserialize(data);
     }
