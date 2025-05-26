@@ -48,7 +48,7 @@ public class EventStore : IEventStore
                 Created = e.Created,
                 StreamId = e.StreamId,
                 Version = e.Version,
-                Type = e.Type,
+                Schema = e.Schema,
                 Data = e.Data,
             });
 

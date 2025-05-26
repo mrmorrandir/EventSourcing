@@ -5,7 +5,7 @@ public interface IEventData
     Guid Id { get; }
     Guid StreamId { get; }
     int Version { get; }
-    DateTime Created { get; }
-    string Type { get; }
+    DateTimeOffset Created { get; }
+    string Schema { get; }
     string Data { get; }
 }

@@ -140,6 +140,7 @@ public partial class AggregateFullRepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("using System.Linq;");
         sb.AppendLine("using EventSourcing;");
         sb.AppendLine("using EventSourcing.Mappers;");
+        sb.AppendLine("using EventSourcing.Stores;");
         sb.AppendLine("using EventSourcing.Repositories;");
 
         var eventNamespaces = info.ApplyMethods.Select(x => x.EventNamespace).ToList().Concat(info.CreateMethods.Select(x => x.EventNamespace)).ToList();
@@ -149,10 +150,10 @@ public partial class AggregateFullRepositoryGenerator : IIncrementalGenerator
             sb.AppendLine($"using {eventNamespace};");
         
         sb.AppendLine();
-        sb.AppendLine($"namespace {info.RepositoryNamespace}");
+        sb.AppendLine($"namespace {info.RepositoryNamespace};");
+        sb.AppendLine();
+        sb.AppendLine($"public partial class {info.AggregateName}Repository");
         sb.AppendLine("{");
-        sb.AppendLine($"    public partial class {info.AggregateName}Repository");
-        sb.AppendLine("    {");
         
         // Create static mapper fields
         foreach(var mapperInfo in mapperInfos)
@@ -161,111 +162,117 @@ public partial class AggregateFullRepositoryGenerator : IIncrementalGenerator
             if (!mapperFieldName.EndsWith("Mapper"))
                 mapperFieldName += "Mapper";
             
-            sb.AppendLine($"        private static readonly {mapperInfo.MapperFullname} {mapperFieldName} = new();");
+            sb.AppendLine($"    private static readonly {mapperInfo.MapperFullname} {mapperFieldName} = new();");
         }
 
-        sb.AppendLine("        private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();");
+        sb.AppendLine("    private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();");
+        sb.AppendLine();
+        sb.AppendLine("    private readonly Dictionary<Guid, List<object>> _streams = new();");
+        // sb.AppendLine("    private readonly IEventStore _eventStore;");
         sb.AppendLine();
         
         // Create static constructor to initialize mappers
-        sb.AppendLine($"        static {info.AggregateName}Repository()");
-        sb.AppendLine("        {");
+        sb.AppendLine($"    static {info.AggregateName}Repository()");
+        sb.AppendLine("    {");
         foreach (var mapperInfo in mapperInfos)
         {
-            sb.AppendLine($"            foreach (string schema in {mapperInfo.MapperFieldName}.Schemas)");
-            sb.AppendLine($"                _deserializers.Add(schema, (typeSchema, data) => {mapperInfo.MapperFieldName}.Deserialize(typeSchema, data));");
+            sb.AppendLine($"        foreach (string schema in {mapperInfo.MapperFieldName}.Schemas)");
+            sb.AppendLine($"            _deserializers.Add(schema, (typeSchema, data) => {mapperInfo.MapperFieldName}.Deserialize(typeSchema, data));");
         }
-        sb.AppendLine("        }");
+        sb.AppendLine("    }");
         sb.AppendLine();
-        
-        sb.AppendLine("        private readonly Dictionary<Guid, List<object>> _streams = new();");
+        // sb.AppendLine($"    public {info.AggregateName}Repository(IEventStore eventStore)");
+        // sb.AppendLine("    {");
+        // sb.AppendLine("        _eventStore = eventStore;");
+        // sb.AppendLine("    }");
+        sb.AppendLine($"    public {info.AggregateName}Repository()");
+        sb.AppendLine("    {");
         sb.AppendLine();
-        sb.AppendLine($"        public {info.AggregateName}Repository() {{ }}");
+        sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"        public {info.AggregateName} Get(Guid id)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (!_streams.TryGetValue(id, out var events))");
-        sb.AppendLine("                throw new InvalidOperationException($\"Aggregate with ID {id} not found.\");");
+        sb.AppendLine($"    public {info.AggregateName} Get(Guid id)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (!_streams.TryGetValue(id, out var events))");
+        sb.AppendLine("            throw new InvalidOperationException($\"Aggregate with ID {id} not found.\");");
         sb.AppendLine();
-        sb.AppendLine($"            {info.AggregateName}? aggregate = null;");
-        sb.AppendLine("            foreach (var evt in events)");
-        sb.AppendLine("                aggregate = aggregate == null ? CreateFromEvent(evt) : ApplyEvent(aggregate, evt);");
+        sb.AppendLine($"        {info.AggregateName}? aggregate = null;");
+        sb.AppendLine("        foreach (var evt in events)");
+        sb.AppendLine("            aggregate = aggregate == null ? CreateFromEvent(evt) : ApplyEvent(aggregate, evt);");
         sb.AppendLine();
-        sb.AppendLine("            return aggregate ?? throw new InvalidOperationException($\"No events found for aggregate with ID {id}.\");");
-        sb.AppendLine("        }");
+        sb.AppendLine("        return aggregate ?? throw new InvalidOperationException($\"No events found for aggregate with ID {id}.\");");
+        sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine("        public void Save(Guid id, IEnumerable<IEvent> events)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (!_streams.ContainsKey(id))");
-        sb.AppendLine("                _streams[id] = [];");
-        sb.AppendLine("            foreach (var evt in events)");
-        sb.AppendLine("                _streams[id].Add(evt);");
-        sb.AppendLine("        }");
+        sb.AppendLine("    public void Save(Guid id, IEnumerable<IEvent> events)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (!_streams.ContainsKey(id))");
+        sb.AppendLine("            _streams[id] = [];");
+        sb.AppendLine("        foreach (var evt in events)");
+        sb.AppendLine("            _streams[id].Add(evt);");
+        sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"        public {info.AggregateName} SaveAndGet(Guid id, IEnumerable<IEvent> events)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            Save(id, events);");
-        sb.AppendLine("            return Get(id);");
-        sb.AppendLine("        }");
+        sb.AppendLine($"    public {info.AggregateName} SaveAndGet(Guid id, IEnumerable<IEvent> events)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        Save(id, events);");
+        sb.AppendLine("        return Get(id);");
+        sb.AppendLine("    }");
         sb.AppendLine();
 
         // Create ApplyEvent method
         if (info.ApplyMethods.Count > 0)
         {
-            sb.AppendLine($"        private static {info.AggregateName} ApplyEvent({info.AggregateName} aggregate, object evt)");
+            sb.AppendLine($"    private static {info.AggregateName} ApplyEvent({info.AggregateName} aggregate, object evt)");
+            sb.AppendLine("    {");
+            sb.AppendLine("        return evt switch");
             sb.AppendLine("        {");
-            sb.AppendLine("            return evt switch");
-            sb.AppendLine("            {");
             
             // Create cases for each event type / each apply method
             foreach (var method in info.ApplyMethods) 
-                sb.AppendLine($"                {method.EventName} e => aggregate.Apply(e),");
+                sb.AppendLine($"            {method.EventName} e => aggregate.Apply(e),");
             
-            sb.AppendLine("                _ => throw new InvalidOperationException($\"Unknown event type: {evt.GetType().Name}\")");
-            sb.AppendLine("            };");
-            sb.AppendLine("        }");
+            sb.AppendLine("            _ => throw new InvalidOperationException($\"Unknown event type: {evt.GetType().Name}\")");
+            sb.AppendLine("        };");
+            sb.AppendLine("    }");
         }
 
         // Create CreateFromEvent method
         if (info.CreateMethods.Count > 0)
         {
-            sb.AppendLine($"        private static {info.AggregateName} CreateFromEvent(object evt)");
+            sb.AppendLine($"    private static {info.AggregateName} CreateFromEvent(object evt)");
+            sb.AppendLine("    {");
+            sb.AppendLine("        return evt switch");
             sb.AppendLine("        {");
-            sb.AppendLine("            return evt switch");
-            sb.AppendLine("            {");
             
             // Create cases for each event type / each create method
             foreach (var method in info.CreateMethods) 
-                sb.AppendLine($"                {method.EventName} e => {info.AggregateName}.Create(e),");
+                sb.AppendLine($"            {method.EventName} e => {info.AggregateName}.Create(e),");
             
-            sb.AppendLine("                _ => throw new InvalidOperationException($\"Unknown event type: {evt.GetType().Name}\")");
-            sb.AppendLine("            };");
-            sb.AppendLine("        }");
+            sb.AppendLine("            _ => throw new InvalidOperationException($\"Unknown event type: {evt.GetType().Name}\")");
+            sb.AppendLine("        };");
+            sb.AppendLine("    }");
         }
         
         sb.AppendLine();
-        sb.AppendLine("        private static ISerializedEvent Serialize(IEvent @event)");
+        sb.AppendLine("    private static ISerializedEvent Serialize(IEvent @event)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        return @event.GetType() switch");
         sb.AppendLine("        {");
-        sb.AppendLine("            return @event.GetType() switch");
-        sb.AppendLine("            {");
         
         // Create serialization cases for each event type
         foreach (var mapperInfo in mapperInfos)
-            sb.AppendLine($"                {{ }} type when type == typeof({mapperInfo.EventFullName}) => {mapperInfo.MapperFieldName}.Serialize(({mapperInfo.EventFullName})@event),");
+            sb.AppendLine($"            {{ }} type when type == typeof({mapperInfo.EventFullName}) => {mapperInfo.MapperFieldName}.Serialize(({mapperInfo.EventFullName})@event),");
         
-        sb.AppendLine("                _ => throw new EventRegistryException($\"No serializer found for type {@event.GetType().Name}\")");
-        sb.AppendLine("            };");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine("        private static IEvent Deserialize(string schema, string data)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (!_deserializers.TryGetValue(schema, out var deserializer))");
-        sb.AppendLine("                throw new EventRegistryException($\"No deserializer found for type {schema}\");");
-        sb.AppendLine();
-        sb.AppendLine("            return deserializer(schema, data);");
-        sb.AppendLine("        }");
-
+        sb.AppendLine("            _ => throw new EventRegistryException($\"No serializer found for type {@event.GetType().Name}\")");
+        sb.AppendLine("        };");
         sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private static IEvent Deserialize(string schema, string data)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        if (!_deserializers.TryGetValue(schema, out var deserializer))");
+        sb.AppendLine("            throw new EventRegistryException($\"No deserializer found for type {schema}\");");
+        sb.AppendLine();
+        sb.AppendLine("        return deserializer(schema, data);");
+        sb.AppendLine("    }");
+
         sb.AppendLine("}");
         return sb.ToString();
     }

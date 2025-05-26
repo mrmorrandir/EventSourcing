@@ -25,7 +25,7 @@ public abstract class EventStoreTests
         eventData.StreamId.Should().Be(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         eventData.Version.Should().Be(1);
         eventData.Created.Should().BeWithin(TimeSpan.FromSeconds(1));
-        eventData.Type.Should().Be("test-type");
+        eventData.Schema.Should().Be("test-type");
         eventData.Data.Should().Be("test-data");
         
         var eventData2 = events.Skip(1).First();
@@ -33,7 +33,7 @@ public abstract class EventStoreTests
         eventData2.StreamId.Should().Be(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         eventData2.Version.Should().Be(2);
         eventData2.Created.Should().BeWithin(TimeSpan.FromSeconds(1));
-        eventData2.Type.Should().Be("test-type");
+        eventData2.Schema.Should().Be("test-type");
         eventData2.Data.Should().Be("test-data");
         
         var eventData3 = events.Skip(2).First();
@@ -41,7 +41,7 @@ public abstract class EventStoreTests
         eventData3.StreamId.Should().Be(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         eventData3.Version.Should().Be(3);
         eventData3.Created.Should().BeWithin(TimeSpan.FromSeconds(1));
-        eventData3.Type.Should().Be("test-type");
+        eventData3.Schema.Should().Be("test-type");
         eventData3.Data.Should().Be("test-data");
     }
     

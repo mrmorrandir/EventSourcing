@@ -10,7 +10,7 @@ public class EventData : IEventData
     /// <summary>
     ///     The timestamp of the event.
     /// </summary>
-    public DateTime Created { get; init; } = DateTime.Now;
+    public DateTimeOffset Created { get; init; } = DateTimeOffset.Now;
 
     /// <summary>
     ///     The StreamId of the event - this is the Id of the AggregateRoot
@@ -25,7 +25,7 @@ public class EventData : IEventData
     /// <summary>
     ///     The Type of the Event
     /// </summary>
-    public string Type { get; init; } = string.Empty;
+    public string Schema { get; init; } = string.Empty;
 
     /// <summary>
     ///     The serialized data of the Event
@@ -38,7 +38,7 @@ public class EventData : IEventData
     {
         StreamId = streamId;
         Version = version;
-        Type = type;
+        Schema = type;
         Data = data;
     }
 }

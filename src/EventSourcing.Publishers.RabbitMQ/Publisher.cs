@@ -30,7 +30,7 @@ public class Publisher<TEvent> : IPublisher<TEvent> where TEvent : IEvent
         await channel.ExchangeDeclareAsync(_baseExchangeName, ExchangeType.Topic, true, false, cancellationToken: cancellationToken);
         var serializedEvent = _eventRegistry.Serialize(@event);
 
-        var routingKey = serializedEvent.Type.Replace("-", ".");
+        var routingKey = serializedEvent.Schema.Replace("-", ".");
         var body = Encoding.UTF8.GetBytes(serializedEvent.Data);
         await channel.BasicPublishAsync(_baseExchangeName, routingKey, body, cancellationToken);
     }

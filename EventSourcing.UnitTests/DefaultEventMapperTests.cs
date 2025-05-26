@@ -13,7 +13,7 @@ public class DefaultEventMapperTests
 
         var serialized = mapper.Serialize(someEvent);
 
-        serialized.Type.Should().Be("some-event-v1");
+        serialized.Schema.Should().Be("some-event-v1");
         serialized.Data.Should().Be("{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
     }
     

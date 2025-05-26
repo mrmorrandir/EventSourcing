@@ -5,10 +5,9 @@ namespace EventSourcing.Stores;
 /// <summary>
 /// This is a very simple event store implementation. It uses a dictionary to store the events.
 /// </summary>
-[Obsolete("This is a very simple event store implementation. It uses a dictionary to store the events. Use the EventStore instead.")]
 public class InMemoryEventStore : IEventStore
 {
-    private ConcurrentDictionary<Guid, ConcurrentBag<IEventData>> _events = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentBag<IEventData>> _events = new();
 
     public Task<IEnumerable<IEventData>> GetAsync(Guid streamId, CancellationToken cancellationToken = default)
     {

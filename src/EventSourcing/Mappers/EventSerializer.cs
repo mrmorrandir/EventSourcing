@@ -17,7 +17,7 @@ public class EventSerializer<TEvent> : IEventSerializer<TEvent> where TEvent : I
             var data = JsonSerializer.Serialize(@event, EventSerializerOptions.Default);
             return new SerializedEvent
             {
-                Type = Type,
+                Schema = Type,
                 Data = data
             };
         }

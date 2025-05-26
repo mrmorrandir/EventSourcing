@@ -34,7 +34,7 @@ public class EventRepository : IEventRepository
         {
             try
             {
-                var @event = _eventMapper.Deserialize(eventData.Type, eventData.Data);
+                var @event = _eventMapper.Deserialize(eventData.Schema, eventData.Data);
                 eventHistory.Add(@event);
             }
             catch (Exception ex)
@@ -68,7 +68,7 @@ public class EventRepository : IEventRepository
                     Created = DateTime.Now,
                     StreamId = aggregate.Id,
                     Version = change.ExpectedVersion + 1,
-                    Type = serializedEvent.Type,
+                    Schema = serializedEvent.Schema,
                     Data = serializedEvent.Data
                 };
 

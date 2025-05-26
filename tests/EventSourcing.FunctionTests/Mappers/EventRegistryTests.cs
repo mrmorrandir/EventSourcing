@@ -45,10 +45,10 @@ public class EventRegistryTests
         
         var serialized = registry.Serialize(magicEvent);
         
-        serialized.Type.Should().Be("magic-event-v3");
+        serialized.Schema.Should().Be("magic-event-v3");
         serialized.Data.Should().Be("{\"id\":\"" + magicEvent.Id + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
         
-        var deserialized = (MagicEvent)registry.Deserialize(serialized.Type, serialized.Data);
+        var deserialized = (MagicEvent)registry.Deserialize(serialized.Schema, serialized.Data);
         
         deserialized.Id.Should().Be(magicEvent.Id);
         deserialized.Magic.Should().Be(magicEvent.Magic);

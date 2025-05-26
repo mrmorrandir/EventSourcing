@@ -1,7 +1,7 @@
 ﻿using EventSourcing.Repositories;
-using EventSourcing.SourceGenerators.Target.Aggregates;
+using EventSourcing.SourceGenerators.Target.Domain;
 
-namespace EventSourcing.SourceGenerators.Target.Repositories;
+namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
 
 public partial class MyTestAggregateRepository : IAggregateRepository<MyTestAggregate>
 {
