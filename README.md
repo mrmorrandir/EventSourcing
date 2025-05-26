@@ -100,3 +100,16 @@ In irgendeiner Form müssen dann aber die Events an die Apply-Methoden übergebe
 "MartenDB" ist ein Beispiel dafür wie das gelöst werden kann. Ich weiß aber nicht, ob ich die Komplexität wirklich durchdringen kann.
 Ich würde mir wünschen, dass nicht zu viel Reflection nötig ist und man vielleicht was mit SourceGeneratoren machen kann, um performanter zu sein.  
 *(Brain-dump: Vielleicht kann ich für jedes Aggregat ein eigenes Repository generieren, welches dann die Apply-Methoden kennt und direkt aufruft ?!)*
+
+## Braindump
+
+- EventStore muss überarbeitet werden, damit die Versionierung (optimistic concurrency) funktioniert:
+  - Aktuelle Version des Aggregates muss schnell abgerufen werden können.
+- EventRepository muss noch mehr umgebaut werden
+  - Aktuelle ist bereits ein SourceGenerator im Einsatz, der die Serialisierung und Deserialisierung, sowie die Create und Apply-Methoden Aufrufe in einem Repository generiert.
+  - Vielleicht sollte ich daber das Repository so umbauen, dass es soetwas wie ein ChangeTracker hat, dann kann ich mir nämlich die Veröffentlichung der "Versionsnummern" sparen.  
+  Wenn diese intern geführt werden (zur Id in einem Lookup) dann ist das schöner für den Anwender.
+  - Das EventRepository wollte dann `IDisposable` implementieren, damit ich die Einträge im ChangeTracker verwerfen kann.
+  - Transactions im EventRepository wären auch interessant, dann funktioniert auch die In-Process-Projection sicherer!
+  - Brauche ich im EventStore oder Repository eine "StartStream" Methode, die den Stream anlegt, wenn er nicht existiert? Oder reicht es, wenn ich einfach Events hinzufüge?
+  - Ich kann für den EventStore einen eigenen Datenbank Lookup-Table anlegen, der die StreamId und die aktuelle Version enthält - das sollte performant sein.

@@ -3,6 +3,7 @@ using EventSourcing.Stores;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 using FluentResults;
+using System.Linq;
 
 
 namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
@@ -55,6 +56,8 @@ public partial class DeletedEventMapper : AbstractEventMapper<DeletedEvent>
     partial void Configure();
 }
 
+public record Aggregate<T>(T Instance, int Version) where T : IAggregate;
+
 public class MyTestAggregateRepository
 {
     private static readonly CreatedEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper = new();
@@ -78,12 +81,13 @@ public class MyTestAggregateRepository
 
     public MyTestAggregateRepository(IEventStore eventStore) => _eventStore = eventStore;
 
-    public async Task<Result<MyTestAggregate>> GetAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<Aggregate<MyTestAggregate>>> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        IEnumerable<IEventData>? events;
+        List<IEventData>? events;
         try
         {
-            events = await _eventStore.GetAsync(id, cancellationToken));
+            var eventData = await _eventStore.GetAsync(id, cancellationToken);
+            events = eventData.ToList();
         } 
         catch (Exception ex)
         {
@@ -110,7 +114,10 @@ public class MyTestAggregateRepository
             foreach (var evt in eventInstances)
                 aggregate = aggregate == null ? CreateFromEvent(evt) : ApplyEvent(aggregate, evt);
 
-            return aggregate ?? throw new InvalidOperationException($"No events found for aggregate with id '{id}'.");
+            if (aggregate is null)
+                return new Error($"No events found for aggregate with id '{id}'. #NoEventsFound");
+
+            return new Aggregate<MyTestAggregate>(aggregate, events.Max(x => x.Version));
         }
         catch (Exception ex)
         {
