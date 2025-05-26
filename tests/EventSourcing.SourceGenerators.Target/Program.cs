@@ -2,6 +2,7 @@
 using EventSourcing.SourceGenerators.Target.Aggregates;
 using EventSourcing.SourceGenerators.Target.Aggregates.Generated;
 using EventSourcing.SourceGenerators.Target.Events;
+using EventSourcing.SourceGenerators.Target.Repositories;
 
 namespace EventSourcing.SourceGenerators.Target;
 
