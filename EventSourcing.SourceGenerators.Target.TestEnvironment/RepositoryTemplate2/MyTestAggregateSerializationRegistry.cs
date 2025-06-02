@@ -1,4 +1,6 @@
-﻿using EventSourcing.Mappers;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
+using EventSourcing.Mappers;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 using FluentResults;

@@ -1,3 +1,6 @@
 ﻿namespace EventSourcing;
 
-public interface IAggregate { }
+public interface IAggregate
+{
+    Guid Id { get; }
+}

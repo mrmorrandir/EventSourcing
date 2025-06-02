@@ -7,7 +7,7 @@ namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTempla
 /// </summary>
 public class MyTestAggregateRepository : Repository<MyTestAggregate>
 {
-    public MyTestAggregateRepository(IEventStoreX eventStore, ISerializationRegistry<MyTestAggregate> serializationRegistry, IAggregator<MyTestAggregate> aggregator) : base(eventStore, serializationRegistry, aggregator)
+    public MyTestAggregateRepository(IEventStoreX eventStore, ISerializationRegistry<MyTestAggregate> serializationRegistry, IAggregator<MyTestAggregate> aggregator, IEnumerable<IProjector<MyTestAggregate>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors)
     {
     }
 }
