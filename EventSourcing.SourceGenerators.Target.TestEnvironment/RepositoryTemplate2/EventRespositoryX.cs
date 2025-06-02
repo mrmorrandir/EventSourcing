@@ -31,52 +31,24 @@ public class MyTestAggregateRepositoryX
 
 
     // This methods have to be created for each "Create" Method found in the aggregate.
-    public async Task<Result> CreateAsync(Func<Task<Result<CreatedEvent>>> create, CancellationToken cancellationToken)
+    public async Task<Result<MyTestAggregate>> CreateAsync(Func<Task<CreatedEvent>> create, CancellationToken cancellationToken)
     {
-        var createResult = await create();
+        var createResult = await Result.Try(create);
         if (createResult.IsFailed)
             return new Error("Failed to create aggregate").CausedBy(createResult.Errors);
 
         return await CreateAsync(createResult.Value, cancellationToken);
     }
     
-    public async Task<Result> CreateAsync(Func<CreatedEvent> create, CancellationToken cancellationToken)
+    public async Task<Result<MyTestAggregate>> CreateAsync(Func<CreatedEvent> create, CancellationToken cancellationToken)
     {
-        var createResult = Result.Try(create);
-        if (createResult.IsFailed)
-            return new Error("Failed to create aggregate").CausedBy(createResult.Errors);
-        
-        var createdEvent = createResult.Value;
-        
-        return await CreateAsync(createdEvent, cancellationToken);
+        return await CreateAsync(() => Task.FromResult(create()), cancellationToken);
     }
 
-    private async Task<Result> CreateAsync(IEvent createdEvent, CancellationToken cancellationToken)
-    {
-        var eventStreamResult = await _eventStore.CreateAsync(createdEvent.Id, cancellationToken);
-        if (eventStreamResult.IsFailed)
-            return new Error("Failed to create event stream").CausedBy(eventStreamResult.Errors);
-        
-        var eventStream = eventStreamResult.Value;
-        
-        var serializeResult = Serialize(createdEvent);
-        if (serializeResult.IsFailed)
-            return new Error($"Failed to serialize event of type {createdEvent.GetType().Name}").CausedBy(serializeResult.Errors);
-        
-        var serializedEvent = serializeResult.Value;
-        var eventData = new EventEntity(createdEvent.Id, 1, serializedEvent.Schema, serializedEvent.Data);
-        
-        var appendResult = await eventStream.AppendAsync(eventData, cancellationToken);
-        if (appendResult.IsFailed)
-            return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
-        
-        return await eventStream.SaveAsync(cancellationToken);
-    }
-
-    public async Task<Result<MyTestAggregate>> UpdateAsync(Guid id, Func<MyTestAggregate, Task<Result<List<IEvent>>>> update, CancellationToken cancellationToken)
+    public async Task<Result<MyTestAggregate>> UpdateAsync(Guid aggregateId, Func<MyTestAggregate, Task<List<IEvent>>> update, CancellationToken cancellationToken)
     {
         // Get the event stream for the aggregate
-        var getResult = await _eventStore.GetAsync(id, cancellationToken);
+        var getResult = await _eventStore.GetAsync(aggregateId, cancellationToken);
         if (getResult.IsFailed)
             return new Error("Failed to get event stream").CausedBy(getResult.Errors);
         
@@ -90,17 +62,14 @@ public class MyTestAggregateRepositoryX
         var aggregate = aggregateResult.Value;
         
         // Execute the update function to get the new events
-        var updateResult = await update(aggregate);
+        var updateResult = await Result.Try(() => update(aggregate));
         if (updateResult.IsFailed)
             return new Error("Failed to update aggregate").CausedBy(updateResult.Errors);
 
-        // Validate the events returned by the update function
+        // Check if there are any new events to append
         var events = updateResult.Value.ToList();
-        if (!events.Any())
-            return Result.Ok().WithSuccess("No changes made to the aggregate, nothing to save.");
-        
-        if (events.Any(x => x.Id != id))
-            return new Error("All events must have the same Id as the aggregate").CausedBy("IdMismatch");
+        if (events.Count == 0)
+            return Result.Ok(aggregate).WithSuccess("No changes made to the aggregate, nothing to save.");
 
         // Append the new events to the event stream
         var expectedVersion = eventStream.BaseVersion;
@@ -111,7 +80,7 @@ public class MyTestAggregateRepositoryX
                 return new Error($"Failed to serialize event of type {evt.GetType().Name}").CausedBy(serializeResult.Errors);
 
             var serializedEvent = serializeResult.Value;
-            var eventEntity = new EventEntity(evt.Id, ++expectedVersion, serializedEvent.Schema, serializedEvent.Data);
+            var eventEntity = new EventEntity(evt.AggregateId, ++expectedVersion, serializedEvent.Schema, serializedEvent.Data);
             var appendResult = await eventStream.AppendAsync(eventEntity, cancellationToken);
             if (appendResult.IsFailed)
                 return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
@@ -128,30 +97,67 @@ public class MyTestAggregateRepositoryX
         
         return Result.Ok(updateAggregateResult.Value);
     }
+
+    public async Task<Result<MyTestAggregate>> UpdateAsync(Guid aggregateId, Func<MyTestAggregate, List<IEvent>> update, CancellationToken cancellationToken)
+    {
+        return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
+    }
     
+    private async Task<Result<MyTestAggregate>> CreateAsync(IEvent createdEvent, CancellationToken cancellationToken)
+    {
+        var eventStreamResult = await _eventStore.CreateAsync(createdEvent.AggregateId, cancellationToken);
+        if (eventStreamResult.IsFailed)
+            return new Error("Failed to create event stream").CausedBy(eventStreamResult.Errors);
+        
+        var eventStream = eventStreamResult.Value;
+        
+        var serializeResult = Serialize(createdEvent);
+        if (serializeResult.IsFailed)
+            return new Error($"Failed to serialize event of type {createdEvent.GetType().Name}").CausedBy(serializeResult.Errors);
+        
+        var serializedEvent = serializeResult.Value;
+        var eventData = new EventEntity(createdEvent.AggregateId, 1, serializedEvent.Schema, serializedEvent.Data);
+        
+        var appendResult = await eventStream.AppendAsync(eventData, cancellationToken);
+        if (appendResult.IsFailed)
+            return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
+        
+        var saveResult = await eventStream.SaveAsync(cancellationToken);
+        if (saveResult.IsFailed)
+            return new Error("Failed to save event stream").CausedBy(saveResult.Errors);
+        
+        var createAggregateResult = CreateAndApplyEvents(eventStream.Events);
+        if (createAggregateResult.IsFailed)
+            return new Error("Failed to create aggregate from events").CausedBy(createAggregateResult.Errors);
+
+        return createAggregateResult.Value;
+    }
+
     private Result<MyTestAggregate> CreateAndApplyEvents(IEnumerable<EventEntity> events)
     {
         MyTestAggregate? aggregate = null;
         foreach (var eventEntity in events)
         {
-            var deserializeResult = Result.Try(() => Deserialize(eventEntity.Schema, eventEntity.Data));
+            var deserializeResult = Deserialize(eventEntity.Schema, eventEntity.Data);
             if (deserializeResult.IsFailed)
                 return new Error("Failed to deserialize event").CausedBy(deserializeResult.Errors);
             
             var @event = deserializeResult.Value;
-            try
+            if (aggregate is null)
             {
-                aggregate = aggregate == null ? CreateFromEvent(@event) : ApplyEvent(aggregate, @event);
-            } catch (Exception ex)
-            {
-                return new Error($"Failed to apply event of type {@event.GetType().Name}").CausedBy(ex);
+                var createResult = Result.Try(() => CreateFromEvent(@event));
+                if (createResult.IsFailed)
+                    return new Error($"Failed to create aggregate from event of type {@event.GetType().Name}").CausedBy(createResult.Errors);
+                aggregate = createResult.Value;
+                continue;
             }
+            var applyResult = Result.Try(() => ApplyEvent(aggregate, @event));
+            if (applyResult.IsFailed)
+                return new Error($"Failed to apply event of type {@event.GetType().Name} to aggregate").CausedBy(applyResult.Errors);
+            aggregate = applyResult.Value;
         }
         
-        if (aggregate == null)
-            return new Error("Aggregate could not be created from events");
-        
-        return Result.Ok(aggregate);
+        return aggregate is null ? new Error("Aggregate could not be created from events") : Result.Ok(aggregate);
     }
 
     private static MyTestAggregate ApplyEvent(MyTestAggregate aggregate, object evt)

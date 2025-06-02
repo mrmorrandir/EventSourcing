@@ -1,3 +1,3 @@
 namespace EventSourcing.UnitTests.Events;
 
-public record MagicEvent(Guid Id, string Magic, DateTime Created) : IEvent;
+public record MagicEvent(Guid AggregateId, string Magic, DateTime Created) : IEvent;

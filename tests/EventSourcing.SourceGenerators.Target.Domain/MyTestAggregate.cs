@@ -4,7 +4,7 @@ namespace EventSourcing.SourceGenerators.Target.Domain;
 
 public record MyTestAggregate(Guid Id, string Name, string Description, bool IsDeleted, DateTimeOffset LastChanged) : IAggregate
 {
-    public static MyTestAggregate Create(CreatedEvent @event) => new(@event.Id, @event.Name, @event.Description, false, @event.Timestamp);
+    public static MyTestAggregate Create(CreatedEvent @event) => new(@event.AggregateId, @event.Name, @event.Description, false, @event.Timestamp);
     
     public MyTestAggregate Apply(ChangedNameEvent nameEvent) => this with
     {

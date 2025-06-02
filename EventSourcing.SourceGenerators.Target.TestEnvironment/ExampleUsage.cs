@@ -42,12 +42,6 @@ public class ExampleUsage
 
 
         var updateResult2 = await _repository.UpdateAsync(Guid.Empty, aggregate => [new ChangedDescriptionEvent(aggregate.Id, "Neue Beschreibung", DateTimeOffset.Now)], CancellationToken.None);
-        
-        // New RepositoryX usage example
-        _repositoryX.CreateAsync(() =>
-        {
-            return Task.FromResult(Result.Ok(new CreatedEvent(Guid.NewGuid(), "Test", "Test Description", DateTimeOffset.Now)));
-        }, CancellationToken.None);
 
     }
 
@@ -56,16 +50,27 @@ public class ExampleUsage
         var eventStore = new EventStoreX(_context);
         var eventRepository = new MyTestAggregateRepositoryX(eventStore);
 
-        var createdResult = await eventRepository.CreateAsync(() =>
+        // New RepositoryX usage example
+        var createResult = await _repositoryX.CreateAsync(() => new CreatedEvent(Guid.NewGuid(), "Test", "Test Description", DateTimeOffset.Now), CancellationToken.None);
+        if (createResult.IsFailed)
         {
-            return Task.FromResult<Result<CreatedEvent>>(new CreatedEvent(Guid.NewGuid(), "Test", "Test Description", DateTimeOffset.Now));
-        }, CancellationToken.None);
-
-        var updateResult = await eventRepository.UpdateAsync(Guid.Empty, async aggregate =>
+            Console.WriteLine($"Failed to create aggregate: {string.Join(", ", createResult.Errors.Select(e => e.Message))}");
+            return;
+        }
+        
+        var aggregate = createResult.Value;
+        Console.WriteLine($"Created aggregate: {aggregate}");
+        
+        var updateResult = await _repositoryX.UpdateAsync(aggregate.Id, a => [new ChangedNameEvent(a.Id, "Neuer Name", DateTimeOffset.Now)], CancellationToken.None);
+        if (updateResult.IsFailed)
         {
-            //return Result.Fail("This is a failure message");
-            return new List<IEvent> { new ChangedNameEvent(aggregate.Id, "New Name", DateTimeOffset.Now) };
-        }, CancellationToken.None);
+            Console.WriteLine($"Failed to update aggregate: {string.Join(", ", updateResult.Errors.Select(e => e.Message))}");
+            return;
+        }
+        
+        aggregate = updateResult.Value;
+        Console.WriteLine($"Updated aggregate: {aggregate}");
+        
     }
 }
 

@@ -15,7 +15,7 @@ public class EventSerializerTests
         var serialized = serializer.Serialize(magicEvent);
         
         serialized.Schema.Should().Be("magic-event-v3");
-        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.Id + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
+        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
     }
     
     [Fact]

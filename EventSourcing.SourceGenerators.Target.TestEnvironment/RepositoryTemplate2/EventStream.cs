@@ -44,7 +44,8 @@ public class EventStream
         if (string.IsNullOrWhiteSpace(eventEntity.Data))
             return Task.FromResult<Result>(new Error("The event's Data must not be empty. #MissingData"));
 
-        if (eventEntity.Version != (_events.Max(x => x.Version) + 1))
+        var maxVersion = _appendedEvents.Count > 0 ? _appendedEvents.Max(x => x.Version) : _events.Count > 0 ? _events.Max(x => x.Version) : 0;
+        if (eventEntity.Version != maxVersion + 1)
             return Task.FromResult<Result>(new Error($"The event's Version {eventEntity.Version} does not match the expected version {(_events.Max(x => x.Version) + 1)} for the stream with id '{_streamId}'. #VersionMismatch"));
         
         _appendedEvents.Add(eventEntity);

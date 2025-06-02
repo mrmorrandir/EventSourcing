@@ -14,7 +14,7 @@ public class DefaultEventMapperTests
         var serialized = mapper.Serialize(someEvent);
 
         serialized.Schema.Should().Be("some-event-v1");
-        serialized.Data.Should().Be("{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
+        serialized.Data.Should().Be("{\"id\":\"" + someEvent.AggregateId + "\",\"text\":\"" + someEvent.Text + "\"}");
     }
     
     [Fact]
@@ -23,9 +23,9 @@ public class DefaultEventMapperTests
         var mapper = new SomeDefaultEventMapper();
         var someEvent = new SomeEvent(Guid.NewGuid(), "Some text");
 
-        var deserialized = mapper.Deserialize("some-event-v1", "{\"id\":\"" + someEvent.Id + "\",\"text\":\"" + someEvent.Text + "\"}");
+        var deserialized = mapper.Deserialize("some-event-v1", "{\"id\":\"" + someEvent.AggregateId + "\",\"text\":\"" + someEvent.Text + "\"}");
 
-        deserialized.Id.Should().Be(someEvent.Id);
+        deserialized.AggregateId.Should().Be(someEvent.AggregateId);
         deserialized.Text.Should().Be(someEvent.Text);
     }
 }

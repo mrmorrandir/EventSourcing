@@ -124,4 +124,4 @@ public class PublisherTests : IAsyncLifetime
     }
 }
 
-public record RabbitTestEvent(Guid Id, string Text) : IEvent;
+public record RabbitTestEvent(Guid AggregateId, string Text) : IEvent;

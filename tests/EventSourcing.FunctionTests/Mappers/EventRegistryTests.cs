@@ -46,11 +46,11 @@ public class EventRegistryTests
         var serialized = registry.Serialize(magicEvent);
         
         serialized.Schema.Should().Be("magic-event-v3");
-        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.Id + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
+        serialized.Data.Should().Be("{\"id\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
         
         var deserialized = (MagicEvent)registry.Deserialize(serialized.Schema, serialized.Data);
         
-        deserialized.Id.Should().Be(magicEvent.Id);
+        deserialized.AggregateId.Should().Be(magicEvent.AggregateId);
         deserialized.Magic.Should().Be(magicEvent.Magic);
         deserialized.Created.Should().Be(magicEvent.Created);
     }
@@ -73,7 +73,7 @@ public class EventRegistryTests
         
         var deserialized = (MagicEvent)registry.Deserialize("magic-event-v2", serialized);
         
-        deserialized.Id.Should().Be(magicEventV2.Id);
+        deserialized.AggregateId.Should().Be(magicEventV2.Id);
         deserialized.Magic.Should().Be(magicEventV2.MagicSpell);
         deserialized.Created.Should().Be(magicEventV2.Created);
     }
@@ -96,7 +96,7 @@ public class EventRegistryTests
         
         var deserialized = (MagicEvent)registry.Deserialize("magic-event", serialized);
         
-        deserialized.Id.Should().Be(magicEventV1.Id);
+        deserialized.AggregateId.Should().Be(magicEventV1.Id);
         deserialized.Magic.Should().BeEmpty();
         deserialized.Created.Should().Be(magicEventV1.Created);
     }

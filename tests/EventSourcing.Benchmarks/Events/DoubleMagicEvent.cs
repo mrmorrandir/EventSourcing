@@ -1,3 +1,3 @@
 ﻿namespace EventSourcing.Benchmarks.Events;
 
-public record DoubleMagicEvent(Guid Id, string Magic, DateTime Created) : IEvent;
+public record DoubleMagicEvent(Guid AggregateId, string Magic, DateTime Created) : IEvent;

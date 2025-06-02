@@ -1,3 +1,3 @@
 ﻿namespace EventSourcing.UnitTests.Events;
 
-public record SomeEvent(Guid Id, string Text) : IEvent;
+public record SomeEvent(Guid AggregateId, string Text) : IEvent;

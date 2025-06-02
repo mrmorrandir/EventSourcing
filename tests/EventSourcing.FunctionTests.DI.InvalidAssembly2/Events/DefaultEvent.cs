@@ -1,3 +1,3 @@
 ﻿namespace EventSourcing.FunctionTests.DI.InvalidAssembly2.Events;
 
-public record DefaultEvent(Guid Id, string Text) : IEvent;
+public record DefaultEvent(Guid AggregateId, string Text) : IEvent;

@@ -2,5 +2,5 @@ namespace EventSourcing;
 
 public interface IEvent
 {
-    Guid Id { get; }
+    Guid AggregateId { get; }
 }
