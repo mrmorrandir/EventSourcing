@@ -6,11 +6,11 @@ namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTempla
 
 public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : IAggregate
 {
-    private readonly EventStoreX _eventStore;
+    private readonly IEventStoreX _eventStore;
     private readonly ISerializationRegistry<TAggregate> _serializationRegistry;
     private readonly IAggregator<TAggregate> _aggregator;
 
-    public Repository(EventStoreX eventStore, ISerializationRegistry<TAggregate> serializationRegistry, IAggregator<TAggregate> aggregator)
+    public Repository(IEventStoreX eventStore, ISerializationRegistry<TAggregate> serializationRegistry, IAggregator<TAggregate> aggregator)
     {
         _eventStore = eventStore;
         _serializationRegistry = serializationRegistry;
@@ -34,7 +34,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Task<List<IEvent>>> update, CancellationToken cancellationToken = default)
     {
         // Get the event stream for the aggregate
-        var getResult = await _eventStore.GetAsync(aggregateId, cancellationToken);
+        var getResult = await _eventStore.GetStreamAsync(aggregateId, cancellationToken);
         if (getResult.IsFailed)
             return new Error("Failed to get event stream").CausedBy(getResult.Errors);
         
@@ -91,7 +91,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     
     private async Task<Result<TAggregate>> CreateAsync(IEvent createdEvent, CancellationToken cancellationToken = default)
     {
-        var eventStreamResult = await _eventStore.CreateAsync(createdEvent.AggregateId, cancellationToken);
+        var eventStreamResult = await _eventStore.CreateStreamAsync(createdEvent.AggregateId, cancellationToken);
         if (eventStreamResult.IsFailed)
             return new Error("Failed to create event stream").CausedBy(eventStreamResult.Errors);
         

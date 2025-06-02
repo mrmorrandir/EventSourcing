@@ -4,13 +4,17 @@ using EventSourcing.SourceGenerators.Target.Domain.Events;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyTestAggregateRepository = EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.MyTestAggregateRepository;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options.UseInMemoryDatabase("TestEnvironment"));
-builder.Services.AddScoped<EventStoreX>();
+builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options
+    .UseInMemoryDatabase("TestEnvironment")
+    // Configure the context to ignore transaction warnings
+    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))); 
+builder.Services.AddScoped<IEventStoreX, EventStoreX>();
 builder.Services.AddScoped<MyTestAggregateRepository>();
 builder.Services.AddScoped<IRepository<MyTestAggregate>>(sp => sp.GetRequiredService<MyTestAggregateRepository>());
 builder.Services.AddScoped<IAggregator<MyTestAggregate>, MyTestAggregateAggregator>();

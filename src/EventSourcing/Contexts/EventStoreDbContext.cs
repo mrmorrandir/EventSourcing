@@ -1,5 +1,6 @@
 ﻿using EventSourcing.Stores;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EventSourcing.Contexts;
 
@@ -10,6 +11,11 @@ public class EventStoreDbContext : DbContext, IEventStoreDbContext
     public EventStoreDbContext(DbContextOptions<EventStoreDbContext> options) : base(options) 
     {
         
+    }
+    
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return Database.BeginTransactionAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

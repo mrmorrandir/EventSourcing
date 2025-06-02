@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
-public class EventStream  
+public class EventStream : IEventStream
 {
     private readonly IEventStoreDbContext _context;
     private readonly Guid _streamId;
@@ -54,10 +54,18 @@ public class EventStream
 
     public async Task<Result> SaveAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Start a transaction here
+        var transactionResult = await Result.Try(() => _context.BeginTransactionAsync(cancellationToken));
+        if (transactionResult.IsFailed)
+            return new Error($"Failed to start transaction for stream with id '{_streamId}': {transactionResult.Errors.First().Message}. #FailedToStartTransaction");
+
+        await using var transaction = transactionResult.Value;
         if (_baseVersion != 0)
         {
-            var expectedVersion = await _context.Events.Where(x => x.StreamId == _streamId).MaxAsync(x => x.Version, cancellationToken);
+            var expectedVersionResult = await Result.Try(() => _context.Events.Where(x => x.StreamId == _streamId).MaxAsync(x => x.Version, cancellationToken));
+            if (expectedVersionResult.IsFailed)
+                return new Error($"Failed to get the expected version for stream with id '{_streamId}': {expectedVersionResult.Errors.First().Message}. #FailedToGetExpectedVersion");
+
+            var expectedVersion = expectedVersionResult.Value;
             if (expectedVersion != _baseVersion)
                 return new Error($"Stream with id '{_streamId}' has been modified - expected version {_baseVersion} but found higher version {expectedVersion}. #StreamModified");
         }
@@ -72,11 +80,14 @@ public class EventStream
         var saveResult = await Result.Try(() => _context.SaveChangesAsync(cancellationToken));
         if (saveResult.IsFailed)
             return new Error($"Failed to save events for stream with id '{_streamId}': {saveResult.Errors.First().Message}. #FailedToSaveEvents");
-        
+
         _events.AddRange(_appendedEvents);
         _appendedEvents.Clear();
         _baseVersion = _events.Max(x => x.Version);
-        // TODO: End Transaction here
+        var commitResult = await Result.Try(() => transaction.CommitAsync(cancellationToken));
+        if (commitResult.IsFailed)
+            return new Error($"Failed to commit transaction for stream with id '{_streamId}': {commitResult.Errors.First().Message}. #FailedToCommitTransaction");
+        
         return Result.Ok();
     }
 }

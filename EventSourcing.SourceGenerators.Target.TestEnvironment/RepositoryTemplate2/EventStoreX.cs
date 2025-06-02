@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
-
-public class EventStoreX
+public class EventStoreX : IEventStoreX
 {
     private readonly IEventStoreDbContext _context;
 
@@ -15,7 +14,7 @@ public class EventStoreX
         _context = context;
     }
     
-    public async Task<Result<EventStream>> CreateAsync(Guid streamId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEventStream>> CreateStreamAsync(Guid streamId, CancellationToken cancellationToken = default)
     {
         if (streamId == Guid.Empty)
             return new Error("The stream's Id must not be empty. #MissingId");
@@ -26,11 +25,11 @@ public class EventStoreX
         if (existingStreamResult.Value)
             return new Error($"Stream with id '{streamId}' already exists. #StreamAlreadyExists");
 
-        var eventStream = new EventStream(_context, streamId, new List<EventEntity>());
+        var eventStream = new EventStream(_context, streamId, []);
         return eventStream;
     }
 
-    public async Task<Result<EventStream>> GetAsync(Guid streamId, CancellationToken cancellationToken = default)
+    public async Task<Result<IEventStream>> GetStreamAsync(Guid streamId, CancellationToken cancellationToken = default)
     {
         var eventsResult = await Result.Try(() => _context.Events.AsNoTracking()
             .Where(e => e.StreamId == streamId)

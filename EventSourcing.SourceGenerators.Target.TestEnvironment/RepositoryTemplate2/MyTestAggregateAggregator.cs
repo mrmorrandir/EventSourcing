@@ -3,9 +3,12 @@ using EventSourcing.SourceGenerators.Target.Domain.Events;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
-public class MyTestAggregateAggregator : Aggregator<MyTestAggregate>
+/// <summary>
+/// This better be source-generated
+/// </summary>
+public class MyTestAggregateAggregator : IAggregator<MyTestAggregate>
 {
-    public override MyTestAggregate CreateFromEvent(IEvent evt)
+    public MyTestAggregate CreateFromEvent(IEvent evt)
     {
         return evt switch
         {
@@ -14,7 +17,7 @@ public class MyTestAggregateAggregator : Aggregator<MyTestAggregate>
         };
     }
 
-    public override MyTestAggregate ApplyEvent(MyTestAggregate aggregate, IEvent evt)
+    public MyTestAggregate ApplyEvent(MyTestAggregate aggregate, IEvent evt)
     {
         return evt switch
         {

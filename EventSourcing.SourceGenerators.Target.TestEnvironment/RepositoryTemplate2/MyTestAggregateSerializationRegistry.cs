@@ -5,7 +5,10 @@ using FluentResults;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
-public class MyTestAggregateSerializationRegistry : SerializationRegistry<MyTestAggregate>
+/// <summary>
+/// This better be source-generated
+/// </summary>
+public class MyTestAggregateSerializationRegistry : ISerializationRegistry<MyTestAggregate>
 {
     private static readonly CreatedEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper = new();
     private static readonly ChangedNameEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsChangedNameEventMapper = new();
@@ -26,7 +29,7 @@ public class MyTestAggregateSerializationRegistry : SerializationRegistry<MyTest
             _deserializers.Add(schema, (typeSchema, data) => _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper.Deserialize(typeSchema, data));
     }
     
-    public override Result<ISerializedEvent> Serialize(IEvent @event)
+    public Result<ISerializedEvent> Serialize(IEvent @event)
     {
         return @event.GetType() switch
         {
@@ -38,7 +41,7 @@ public class MyTestAggregateSerializationRegistry : SerializationRegistry<MyTest
         };
     }
 
-    public override Result<IEvent> Deserialize(string schema, string data)
+    public Result<IEvent> Deserialize(string schema, string data)
     {
         if (!_deserializers.TryGetValue(schema, out var deserializer))
             throw new EventRegistryException($"No deserializer found for type {schema}");
