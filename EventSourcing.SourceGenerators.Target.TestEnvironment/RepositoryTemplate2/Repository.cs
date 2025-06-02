@@ -222,7 +222,7 @@ public interface IProjector<in TAggregate> where TAggregate : IAggregate
 /// This has to be source generated
 /// </summary>
 /// <typeparam name="TAggregate"></typeparam>
-public class MyTestAggregatorProjector : IProjector<MyTestAggregate> 
+public class MyTestAggregateProjector : IProjector<MyTestAggregate> 
 {
     private readonly CreatedEventProjection _createdEventProjection;
     private readonly ChangedNameEventProjection _changedNameEventProjection;
@@ -233,7 +233,7 @@ public class MyTestAggregatorProjector : IProjector<MyTestAggregate>
     /// </summary>
     /// <param name="createdEventProjection"></param>
     /// <param name="changedNameEventProjection"></param>
-    public MyTestAggregatorProjector(CreatedEventProjection createdEventProjection, ChangedNameEventProjection changedNameEventProjection, ChangedDescriptionEventProjection changedDescriptionEventProjection)
+    public MyTestAggregateProjector(CreatedEventProjection createdEventProjection, ChangedNameEventProjection changedNameEventProjection, ChangedDescriptionEventProjection changedDescriptionEventProjection)
     {
         _createdEventProjection = createdEventProjection;
         _changedNameEventProjection = changedNameEventProjection;
@@ -360,12 +360,12 @@ public static class DependencyInjection
     public static IServiceCollection AddProjections(this IServiceCollection services)
     {
         // Register the projections
-        services.AddTransient<CreatedEventProjection>();
-        services.AddTransient<ChangedNameEventProjection>();
-        services.AddTransient<ChangedDescriptionEventProjection>();
+        services.AddScoped<CreatedEventProjection>();
+        services.AddScoped<ChangedNameEventProjection>();
+        services.AddScoped<ChangedDescriptionEventProjection>();
 
         // Register the projector
-        services.AddTransient<IProjector<MyTestAggregate>, MyTestAggregatorProjector>();
+        services.AddScoped<IProjector<MyTestAggregate>, MyTestAggregateProjector>();
 
         return services;
     }
