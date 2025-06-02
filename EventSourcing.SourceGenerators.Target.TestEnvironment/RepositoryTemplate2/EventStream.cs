@@ -4,7 +4,7 @@ using EventSourcing.Stores;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 
-namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
 public class EventStream  
 {

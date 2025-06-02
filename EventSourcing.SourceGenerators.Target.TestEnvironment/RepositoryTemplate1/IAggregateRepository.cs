@@ -1,6 +1,7 @@
-﻿using FluentResults;
+﻿using EventSourcing.SourceGenerators.Target.TestEnvironment.Base;
+using FluentResults;
 
-namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate1;
 
 public interface IAggregateRepository<T> where T : IAggregate
 {

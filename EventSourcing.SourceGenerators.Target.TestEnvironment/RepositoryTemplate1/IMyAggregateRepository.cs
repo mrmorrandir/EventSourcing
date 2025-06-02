@@ -1,5 +1,4 @@
 ﻿using EventSourcing.SourceGenerators.Target.Domain;
-using EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate1;
 

@@ -1,21 +1,26 @@
 ﻿using EventSourcing.Contexts;
+using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
-using EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MyTestAggregateRepository = EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.MyTestAggregateRepository;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options.UseInMemoryDatabase("TestEnvironment"));
 builder.Services.AddScoped<EventStoreX>();
-builder.Services.AddScoped<MyTestAggregateRepositoryX>();
+builder.Services.AddScoped<MyTestAggregateRepository>();
+builder.Services.AddScoped<IRepository<MyTestAggregate>>(sp => sp.GetRequiredService<MyTestAggregateRepository>());
+builder.Services.AddScoped<IAggregator<MyTestAggregate>, MyTestAggregateAggregator>();
+builder.Services.AddScoped<ISerializationRegistry<MyTestAggregate>, MyTestAggregateSerializationRegistry>();
 
 var app = builder.Build();
 
 using var scope = app.Services.CreateScope(); 
 
-var repositoryX = scope.ServiceProvider.GetRequiredService<MyTestAggregateRepositoryX>();
+var repositoryX = scope.ServiceProvider.GetRequiredService<MyTestAggregateRepository>();
 
 var createResult = await repositoryX.CreateAsync(() => new CreatedEvent(Guid.NewGuid(), "Test", "Test Description", DateTimeOffset.UtcNow), CancellationToken.None);
 if (createResult.IsFailed)
@@ -52,13 +57,4 @@ var events = await context.Events
 foreach (var evt in events)
 {
     Console.WriteLine($"Event: {evt.Schema}, Version: {evt.Version}, Data: {evt.Data}");
-}
-
-public static class ResultExtensions
-{
-    // Return the full error hierarchy as a string
-    public static string GetFullErrorMessage(this ResultBase result)
-    {
-        return string.Join(" -> ", result.Errors.Select(e => e.Message));
-    }
 }

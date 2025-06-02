@@ -1,7 +1,7 @@
 ﻿using EventSourcing.Mappers;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 
-namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment;
 
 public partial class CreatedEventMapper : AbstractEventMapper<CreatedEvent>
 {

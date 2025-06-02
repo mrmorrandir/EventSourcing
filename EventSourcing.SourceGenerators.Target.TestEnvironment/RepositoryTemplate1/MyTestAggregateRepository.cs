@@ -1,7 +1,7 @@
 ﻿using EventSourcing.Mappers;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
-using EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+using EventSourcing.SourceGenerators.Target.TestEnvironment.Base;
 using EventSourcing.Stores;
 using FluentResults;
 

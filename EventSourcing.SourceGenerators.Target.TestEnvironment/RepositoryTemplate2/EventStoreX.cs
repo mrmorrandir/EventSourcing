@@ -3,7 +3,7 @@ using EventSourcing.Stores;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 
-namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
 
 public class EventStoreX
@@ -20,9 +20,10 @@ public class EventStoreX
         if (streamId == Guid.Empty)
             return new Error("The stream's Id must not be empty. #MissingId");
 
-        var existingStream = await _context.Events.AsNoTracking()
-            .AnyAsync(e => e.StreamId == streamId, cancellationToken);
-        if (existingStream)
+        var existingStreamResult = await Result.Try(() => _context.Events.AsNoTracking().AnyAsync(e => e.StreamId == streamId, cancellationToken));
+        if (existingStreamResult.IsFailed)
+            return new Error($"Failed to check if stream with id '{streamId}' exists. #FailedToCheckStreamExists");
+        if (existingStreamResult.Value)
             return new Error($"Stream with id '{streamId}' already exists. #StreamAlreadyExists");
 
         var eventStream = new EventStream(_context, streamId, new List<EventEntity>());
@@ -35,7 +36,8 @@ public class EventStoreX
             .Where(e => e.StreamId == streamId)
             .OrderBy(e => e.Version)
             .ToListAsync(cancellationToken));
-        if (eventsResult is null)
+        
+        if (eventsResult.IsFailed)
             return new Error($"Failed to retrieve events for stream with id '{streamId}'. #FailedToRetrieveEvents");
         if (eventsResult.Value.Count == 0)
             return new Error($"Stream with id '{streamId}' not found. #StreamNotFound");
