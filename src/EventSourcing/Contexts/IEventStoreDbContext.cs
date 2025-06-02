@@ -5,6 +5,6 @@ namespace EventSourcing.Contexts;
 
 public interface IEventStoreDbContext
 {
-    DbSet<EventData> Events { get; set; }
+    DbSet<EventEntity> Events { get; set; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

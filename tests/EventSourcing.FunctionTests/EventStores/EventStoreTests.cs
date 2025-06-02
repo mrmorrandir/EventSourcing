@@ -12,9 +12,9 @@ public abstract class EventStoreTests
         var eventStore = EventStore;
         await eventStore.AppendAsync(Guid.Parse("00000000-0000-0000-0000-000000000001"), 0, new[]
         {
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000001"), 1, "test-type", "test-data"),
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000001"), 2, "test-type", "test-data"),
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000001"), 3, "test-type", "test-data")
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000001"), 1, "test-type", "test-data"),
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000001"), 2, "test-type", "test-data"),
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000001"), 3, "test-type", "test-data")
         });
         
         var events = (await eventStore.GetAsync(Guid.Parse("00000000-0000-0000-0000-000000000001"))).ToArray();
@@ -61,19 +61,19 @@ public abstract class EventStoreTests
         // Original
         await eventStore.AppendAsync(Guid.Parse("00000000-0000-0000-0000-000000000002"), 0, new[]
         {
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000002"), 1, "test-type", "test-data"),
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000002"), 1, "test-type", "test-data"),
         });
         // Regular modification
         await eventStore.AppendAsync(Guid.Parse("00000000-0000-0000-0000-000000000002"), 1, new[]
         {
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000002"), 2, "test-type", "test-data"),
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000002"), 2, "test-type", "test-data"),
         });
 
         // "Concurrent" modification on the base of original (not allowed)
         // This happens when multiple processes are trying to modify the same stream (multiple clients currently editing the same element)
         var func = () => eventStore.AppendAsync(Guid.Parse("00000000-0000-0000-0000-000000000002"), 1, new[]
         {
-            new EventData(Guid.Parse("00000000-0000-0000-0000-000000000002"), 2, "test-type", "test-data"),
+            new EventEntity(Guid.Parse("00000000-0000-0000-0000-000000000002"), 2, "test-type", "test-data"),
         });
 
         await func.Should().ThrowAsync<EventStoreException>().WithMessage("*modified*");

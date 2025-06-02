@@ -1,0 +1,16 @@
+﻿using EventSourcing.Mappers;
+using EventSourcing.SourceGenerators.Target.Domain.Events;
+
+namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+
+public partial class ChangedNameEventMapper : AbstractEventMapper<ChangedNameEvent>
+{
+    public ChangedNameEventMapper()
+    {
+        WillSerialize("changed-name-event-v1");
+        CanDeserialize("changed-name-event-v1");
+        Configure();
+    }
+
+    partial void Configure();
+}

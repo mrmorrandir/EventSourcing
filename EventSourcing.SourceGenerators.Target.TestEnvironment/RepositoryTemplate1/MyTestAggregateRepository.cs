@@ -1,64 +1,13 @@
 ﻿using EventSourcing.Mappers;
-using EventSourcing.Stores;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
+using EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
+using EventSourcing.Stores;
 using FluentResults;
-using System.Linq;
 
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate1;
 
-namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories;
-
-public partial class CreatedEventMapper : AbstractEventMapper<CreatedEvent>
-{
-    public CreatedEventMapper()
-    {
-        WillSerialize("created-event-v1");
-        CanDeserialize("created-event-v1");
-        Configure();
-    }
-
-    partial void Configure();
-}
-
-public partial class ChangedNameEventMapper : AbstractEventMapper<ChangedNameEvent>
-{
-    public ChangedNameEventMapper()
-    {
-        WillSerialize("changed-name-event-v1");
-        CanDeserialize("changed-name-event-v1");
-        Configure();
-    }
-
-    partial void Configure();
-}
-
-public partial class ChangedDescriptionEventMapper : AbstractEventMapper<ChangedDescriptionEvent>
-{
-    public ChangedDescriptionEventMapper()
-    {
-        WillSerialize("changed-description-event-v1");
-        CanDeserialize("changed-description-event-v1");
-        Configure();
-    }
-
-    partial void Configure();
-}
-
-public partial class DeletedEventMapper : AbstractEventMapper<DeletedEvent>
-{
-    public DeletedEventMapper()
-    {
-        WillSerialize("deleted-event-v1");
-        CanDeserialize("deleted-event-v1");
-        Configure();
-    }
-
-    partial void Configure();
-}
-
-public record Aggregate<T>(T Instance, int Version) where T : IAggregate;
-
-public class MyTestAggregateRepository
+public class MyTestAggregateRepository : IMyAggregateRepository
 {
     private static readonly CreatedEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper = new();
     private static readonly ChangedNameEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsChangedNameEventMapper = new();
@@ -66,6 +15,7 @@ public class MyTestAggregateRepository
     private static readonly DeletedEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper = new();
     private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();
     private readonly IEventStore _eventStore;
+    private readonly Dictionary<Guid, int> _expectedVersions = new();
 
     static MyTestAggregateRepository()
     {
@@ -83,64 +33,61 @@ public class MyTestAggregateRepository
 
     public async Task<Result<Aggregate<MyTestAggregate>>> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        List<IEventData>? events;
+        List<IEventEntity>? eventDataList;
         try
         {
+            //TODO: Hier muss ncoh was gemacht werden....
             var eventData = await _eventStore.GetAsync(id, cancellationToken);
-            events = eventData.ToList();
-        } 
+            eventDataList = eventData.ToList();
+            if (_expectedVersions.ContainsKey(id))
+                _expectedVersions[id] = eventDataList.Max(x => x.Version);
+            else
+                _expectedVersions.Add(id, eventDataList.Max(x => x.Version));
+        }
         catch (Exception ex)
         {
             return new Error($"Error while getting events for aggregate with id '{id}'. #GetEventsFailed").CausedBy(ex);
         }
-        
+
         var eventInstances = new List<IEvent>();
-        foreach (var evt in events)
-        {
+        foreach (var evt in eventDataList)
             try
             {
                 var eventInstance = Deserialize(evt.Schema, evt.Data);
                 eventInstances.Add(eventInstance);
-            } 
+            }
             catch (Exception ex)
             {
                 return new Error($"Error while deserializing event with schema '{evt.Schema}' from stream with id '{id}'. #DeserializeEventFailed").CausedBy(ex);
             }
-        }
 
-        try
-        {
-            MyTestAggregate? aggregate = null;
-            foreach (var evt in eventInstances)
-                aggregate = aggregate == null ? CreateFromEvent(evt) : ApplyEvent(aggregate, evt);
+        if (!eventInstances.Any())
+            return new Error($"No events found for aggregate with id '{id}'. #NoEventsFound");
 
-            if (aggregate is null)
-                return new Error($"No events found for aggregate with id '{id}'. #NoEventsFound");
-
-            return new Aggregate<MyTestAggregate>(aggregate, events.Max(x => x.Version));
-        }
-        catch (Exception ex)
-        {
-            return new Error($"Error while applying events to aggregate with id '{id}'. #ApplyEventsFailed").CausedBy(ex);
-        }
+        var createResult = CreateAggregateFromEvents(eventInstances);
+        if (createResult.IsFailed)
+            return createResult.ToResult();
+        
+        var aggregate = createResult.Value;
+        var version = eventDataList.Max(x => x.Version);
+        
+        return new Aggregate<MyTestAggregate>(aggregate, version);
     }
 
     public async Task<Result> SaveAsync(Guid id, IEnumerable<IEvent> events, int expectedVersion, CancellationToken cancellationToken)
     {
-        // TODO: Hier fehlt noch Logik und Versioning!
-        var serializedEvents = new List<EventData>();
+        var serializedEvents = new List<EventEntity>();
         try
         {
             foreach (var evt in events)
             {
                 var serializedEvent = Serialize(evt);
-                var eventData = new EventData
+                var eventData = new EventEntity
                 {
                     Id = Guid.NewGuid(),
                     Created = DateTimeOffset.Now,
                     StreamId = id,
-                    //TODO: Version is WRONG atm.
-                    Version = expectedVersion + serializedEvents.Count + 1, // Increment version for each event
+                    Version = ++expectedVersion,
                     Schema = serializedEvent.Schema,
                     Data = serializedEvent.Data
                 };
@@ -151,7 +98,7 @@ public class MyTestAggregateRepository
         {
             return new Error($"Error while serializing events for aggregate with id '{id}'. #SerializeEventsFailed").CausedBy(ex);
         }
-        
+
         try
         {
             await _eventStore.AppendAsync(id, expectedVersion, serializedEvents, cancellationToken);
@@ -161,13 +108,61 @@ public class MyTestAggregateRepository
         {
             return new Error($"Error while appending events to aggregate with id '{id}'. #AppendEventsFailed").CausedBy(ex);
         }
+
+        // Lokales Mapping durchführen damit die Daten nicht neu geladen werden müssen.
+        //var aggregateResult = ApplyEvents(new MyTestAggregate(), serializedEvents.Select(e => Deserialize(e.Schema, e.Data)).ToList());
     }
 
-    public MyTestAggregate SaveAndUpdate(Guid id, IEnumerable<IEvent> events)
+    // Methode umbenennen in SaveAndRefreshAsync... damit klar wird, dass sie die Daten neu läd.
+    public async Task<Result<Aggregate<MyTestAggregate>>> SaveAndUpdateAsync(Guid id, IEnumerable<IEvent> events, int expectedVersion, CancellationToken cancellationToken)
     {
-        Save(id, events);
-        return Get(id);
+        var result = SaveAsync(id, events, expectedVersion, cancellationToken).GetAwaiter().GetResult();
+        if (result.IsFailed)
+            return result;
+
+        return await GetAsync(id, cancellationToken);
     }
+
+    private Result<MyTestAggregate> CreateAggregateFromEvents(List<IEvent> events)
+    {
+        if (events.Count == 0)
+            return new Error("No events provided to create aggregate. #NoEventsProvided");
+
+        MyTestAggregate? aggregate = null;
+        try
+        {
+            foreach (var evt in events)
+                aggregate = aggregate == null ? CreateFromEvent(evt) : ApplyEvent(aggregate, evt);
+
+            if (aggregate == null)
+                return new Error("Aggregate could not be created from provided events. #AggregateCreationFailed");
+
+            return aggregate;
+        }
+        catch (Exception ex)
+        {
+            return new Error("Error while applying events to create aggregate. #ApplyEventsFailed").CausedBy(ex);
+        }
+    }
+    
+    private Result<MyTestAggregate> ApplyEvents(MyTestAggregate aggregate, List<IEvent> events)
+    {
+        if (events.Count == 0)
+            return new Error("No events provided to create aggregate. #NoEventsProvided");
+        try
+        {
+            foreach (var evt in events)
+                aggregate = ApplyEvent(aggregate, evt);
+
+            return aggregate;
+        }
+        catch (Exception ex)
+        {
+            return new Error("Error while applying events to create aggregate. #ApplyEventsFailed").CausedBy(ex);
+        }
+    }
+    
+    
 
     private static MyTestAggregate ApplyEvent(MyTestAggregate aggregate, object evt)
     {

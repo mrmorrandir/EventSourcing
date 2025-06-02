@@ -5,7 +5,7 @@ namespace EventSourcing.Contexts;
 
 public class EventStoreDbContext : DbContext, IEventStoreDbContext
 {
-    public DbSet<EventData> Events { get; set; }
+    public DbSet<EventEntity> Events { get; set; }
     
     public EventStoreDbContext(DbContextOptions<EventStoreDbContext> options) : base(options) 
     {
@@ -14,15 +14,15 @@ public class EventStoreDbContext : DbContext, IEventStoreDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<EventData>()
+        modelBuilder.Entity<EventEntity>()
             .HasKey(e => e.Id);
-        modelBuilder.Entity<EventData>()
+        modelBuilder.Entity<EventEntity>()
             .HasIndex(e => e.StreamId);
-        modelBuilder.Entity<EventData>()
+        modelBuilder.Entity<EventEntity>()
             .HasIndex(e => new { e.StreamId, e.Version }).IsUnique();
-        modelBuilder.Entity<EventData>()
+        modelBuilder.Entity<EventEntity>()
             .Property(e => e.Data);
-        modelBuilder.Entity<EventData>()
+        modelBuilder.Entity<EventEntity>()
             .HasIndex(e => e.Created);
 
         base.OnModelCreating(modelBuilder);

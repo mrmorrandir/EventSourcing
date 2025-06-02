@@ -1,6 +1,6 @@
 ﻿namespace EventSourcing.Stores;
 
-public interface IEventData
+public interface IEventEntity
 {
     Guid Id { get; }
     Guid StreamId { get; }

@@ -1,6 +1,6 @@
 ﻿namespace EventSourcing.Stores;
 
-public class EventData : IEventData
+public class EventEntity : IEventEntity
 {
     /// <summary>
     ///     A unique identifier for the event.
@@ -10,7 +10,7 @@ public class EventData : IEventData
     /// <summary>
     ///     The timestamp of the event.
     /// </summary>
-    public DateTimeOffset Created { get; init; } = DateTimeOffset.Now;
+    public DateTimeOffset Created { get; init; } = DateTimeOffset.UtcNow;
 
     /// <summary>
     ///     The StreamId of the event - this is the Id of the AggregateRoot
@@ -32,13 +32,13 @@ public class EventData : IEventData
     /// </summary>
     public string Data { get; init; } = string.Empty;
     
-    public EventData() {}
+    public EventEntity() {}
 
-    public EventData(Guid streamId, int version, string type, string data)
+    public EventEntity(Guid streamId, int version, string schema, string data)
     {
         StreamId = streamId;
         Version = version;
-        Schema = type;
+        Schema = schema;
         Data = data;
     }
 }

@@ -19,7 +19,7 @@ public class EventRepository : IEventRepository
     
     public async Task<Result<TAggregate>> GetAsync<TAggregate>(Guid id, CancellationToken cancellationToken = default)  where TAggregate : IAggregateRoot
     {
-        IEnumerable<IEventData> eventDataHistory;
+        IEnumerable<IEventEntity> eventDataHistory;
         try
         {
             eventDataHistory = await _eventStore.GetAsync(id, cancellationToken);
@@ -53,7 +53,7 @@ public class EventRepository : IEventRepository
         var changes = aggregate.GetChanges();
         if (!changes.Any()) return Result.Ok();
         
-        var eventStoreEvents = new List<EventData>();
+        var eventStoreEvents = new List<EventEntity>();
         var streamId = aggregate.Id;
         var streamVersion = changes.First().ExpectedVersion;
 
@@ -62,7 +62,7 @@ public class EventRepository : IEventRepository
             foreach (var change in changes)
             {
                 var serializedEvent = _eventMapper.Serialize(change.Event);
-                var eventData = new EventData
+                var eventData = new EventEntity
                 {
                     Id = Guid.NewGuid(),
                     Created = DateTime.Now,
