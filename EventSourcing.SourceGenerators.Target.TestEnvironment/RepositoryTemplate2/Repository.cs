@@ -245,3 +245,123 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         return aggregate == null ? new Error("Aggregate could not be created from events") : Result.Ok(aggregate);
     }
 }
+
+public interface IProjector<TAggregate> where TAggregate : IAggregate
+{
+    //TODO: Return a transaction object or something similar to save the state/model of the projection in a transaction if needed.
+    /// <summary>
+    /// This method projects the events to a new state or model.
+    /// <para>
+    /// When the event returns a Result.Fail, the events of the latest action are not saved.
+    /// </para>
+    /// </summary>
+    /// <param name="state"></param>
+    /// <param name="event"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<Result> ProjectAsync(TAggregate state, IEvent @event, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// This has to be source generated
+/// </summary>
+/// <typeparam name="TAggregate"></typeparam>
+public class MyTestAggregatorProjector : IProjector<MyTestAggregate> 
+{
+    private readonly CreatedEventProjection _createdEventProjection;
+    private readonly ChangedNameEventProjection _changedNameEventProjection;
+
+    /// <summary>
+    /// Events must be registered
+    /// </summary>
+    /// <param name="createdEventProjection"></param>
+    /// <param name="changedNameEventProjection"></param>
+    public MyTestAggregatorProjector(CreatedEventProjection createdEventProjection, ChangedNameEventProjection changedNameEventProjection)
+    {
+        _createdEventProjection = createdEventProjection;
+        _changedNameEventProjection = changedNameEventProjection;
+    }
+    
+    public async Task<Result> ProjectAsync(MyTestAggregate state, IEvent @event, CancellationToken cancellationToken = default)
+    {
+        return @event.GetType() switch
+        {
+            {  } type when type == typeof(CreatedEvent) => await Result.Try(() => _createdEventProjection.ProjectAsync(state, (CreatedEvent)@event, cancellationToken)),
+            {  } type when type == typeof(ChangedNameEvent) => await Result.Try(() => _changedNameEventProjection.ProjectAsync(state, (ChangedNameEvent)@event, cancellationToken)),
+            _ => Result.Fail($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.")
+        };
+        
+        // TODO: Return some Transaction-Instance so that I can save the state/model of the projection in a transaction if needed!
+    }
+}
+
+public interface IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
+{
+    Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
+}
+
+
+/// <summary>
+/// This has to be source generated (without constructor)
+/// </summary>
+public partial class CreatedEventProjection : AbstractProjection<MyTestAggregate, CreatedEvent>
+{
+    
+}
+
+/// <summary>
+/// This has to be manually implemented
+/// </summary>
+public partial class CreatedEventProjection
+{
+    private readonly ILogger<CreatedEventProjection> _logger;
+
+    public CreatedEventProjection(ILogger<CreatedEventProjection> logger)
+    {
+        _logger = logger;
+    }
+    
+    public override Task ProjectAsync(MyTestAggregate state, CreatedEvent @event, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Projecting CreatedEvent for aggregate {AggregateId}", state.Id);
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// This has to be source generated (without constructor)
+/// </summary>
+public partial class ChangedNameEventProjection : AbstractProjection<MyTestAggregate, ChangedNameEvent>
+{
+
+}
+
+/// <summary>
+/// This has to be manually implemented
+/// </summary>
+public partial class ChangedNameEventProjection
+{
+    // This is a manually implemented projection for the ChangedNameEvent.
+    // It can be used to log or perform additional actions when the name of the aggregate changes.
+
+    private readonly ILogger<ChangedNameEventProjection> _logger;
+
+    public ChangedNameEventProjection(ILogger<ChangedNameEventProjection> logger)
+    {
+        _logger = logger;
+    }
+
+    public override Task ProjectAsync(MyTestAggregate state, ChangedNameEvent @event, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Projecting ChangedNameEvent for aggregate {AggregateId}", state.Id);
+        return Task.CompletedTask;
+    }
+}
+
+public abstract class AbstractProjection<TAggregate, TEvent> : IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
+{
+    public virtual Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.");
+    }
+}

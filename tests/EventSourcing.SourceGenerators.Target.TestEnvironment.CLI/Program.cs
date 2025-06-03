@@ -19,6 +19,7 @@ builder.Services.AddScoped<MyTestAggregateRepository>();
 builder.Services.AddScoped<IRepository<MyTestAggregate>>(sp => sp.GetRequiredService<MyTestAggregateRepository>());
 builder.Services.AddScoped<IAggregator<MyTestAggregate>, MyTestAggregateAggregator>();
 builder.Services.AddScoped<ISerializationRegistry<MyTestAggregate>, MyTestAggregateSerializationRegistry>();
+builder.Services.AddProjections();
 
 var app = builder.Build();
 
@@ -50,6 +51,36 @@ if (updateResult.IsFailed)
         
 aggregate = updateResult.Value;
 Console.WriteLine($"Updated aggregate: {aggregate}");
+
+// var updateResult2 = await repositoryX.UpdateAsync(aggregate.Id, a => 
+// [
+//     new DeletedEvent(aggregate.Id, DateTimeOffset.UtcNow)
+// ], CancellationToken.None);
+//
+// if (updateResult2.IsFailed)
+// {
+//     Console.WriteLine(updateResult2);
+//     return;
+// }
+//
+// aggregate = updateResult2.Value;
+// Console.WriteLine($"Deleted aggregate: {aggregate}");
+
+var updateResult3 = await repositoryX.UpdateAsync(aggregate.Id, a =>
+{
+    //throw new Exception("Something went terribly wrong!");
+
+    return [];
+}, CancellationToken.None);
+
+if (updateResult3.IsFailed)
+{
+    Console.WriteLine($"Update failed: {updateResult3}");
+    return;
+}
+
+aggregate = updateResult3.Value;
+
 
 // List of events for the aggregate
 var context = scope.ServiceProvider.GetRequiredService<IEventStoreDbContext>();
