@@ -8,8 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
-// TODO: I must add the IEventBus to the repository so that it can publish events after they are saved. Alternatively, I can create something like an IEventPublisher or IEventProjector - maybe as base-class/partial-class (with just logging message) to be overwritten...
-// TODO: Maybe I can couple the EventStoreDbContext with another context with the help of transactions, so that I can make sure that the events are saved and their projections, too - otherwise get rid of both (rollback)?!?
 /// <summary>
 /// This is a generic repository for aggregates.
 /// <param>
@@ -32,7 +30,19 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         _projectors = projectors;
     }
 
-    public async Task<Result<TAggregate>> CreateAsync(Func<Task<CreatedEvent>> create, CancellationToken cancellationToken = default)
+    /// <summary>
+    ///     Creates a new aggregate by executing the provided creation function (<paramref name="create"/> and saving the resulting event.
+    ///     <para>
+    ///     The creation function should return a <see cref="CreatedEvent"/> representing the creation of the aggregate.
+    ///     </para>
+    ///     <para>
+    ///     If the creation fails or an error occurs during event serialization, appending, or saving, a failed result is returned with error details.
+    ///     </para>
+    /// </summary>
+    /// <param name="create">A function that returns an event for the creation of an aggregate (passed to the corresponding `Create` method of the aggregate).</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A result containing the created aggregate instance on success, or error details on failure.</returns>
+    public async Task<Result<TAggregate>> CreateAsync(Func<Task<IEvent>> create, CancellationToken cancellationToken = default)
     {
         var createResult = await Result.Try(create);
         if (createResult.IsFailed)
@@ -41,11 +51,49 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         return await CreateAsync(createResult.Value, cancellationToken);
     }
     
-    public async Task<Result<TAggregate>> CreateAsync(Func<CreatedEvent> create, CancellationToken cancellationToken)
+    /// <inheritdoc cref="CreateAsync(Func{Task{IEvent}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> CreateAsync(Func<IEvent> create, CancellationToken cancellationToken)
     {
         return await CreateAsync(() => Task.FromResult(create()), cancellationToken);
     }
 
+    /// <summary>
+    /// <para>
+    /// Updates an existing aggregate by loading the event stream, applying the existing events and providing the aggregate to the update function (given by <paramref name="update"/>).
+    /// </para>
+    /// <para>
+    /// When an error occurs in the <paramref name="update"/> function, the method will return a failed result with the error details.
+    /// </para>
+    /// <para>
+    /// During the update process, the new events are applied to the aggregate temporary, and projections are executed for each new event.
+    /// When there are errors during the projections (<see cref="IProjector{TAggregate}"/>), the method will return a failed result with the error details. No events will be saved in this case, and the aggregate will not be updated.
+    /// </para>
+    /// </summary>
+    /// <param name="aggregateId">The id of the aggregate (aka event stream id)</param>
+    /// <param name="update">A function to provide events as update to the aggregate.</param>
+    /// <param name="cancellationToken">The cancellationToken parameter allows the asynchronous operation to be canceled</param>
+    /// <returns>A result indicating success or error of the operation. On success the updated aggregate instance is provided.</returns>
+    /// <example>
+    /// <code language="csharp">
+    /// var repository = new Repository&lt;MyAggregate&gt;(eventStore, serializationRegistry, aggregator, projectors);
+    /// var result = await repository.UpdateAsync(
+    ///     aggregateId,
+    ///     async aggregate =&gt;
+    ///     {
+    ///         // Apply some business logic and return new events
+    ///         var newEvent = new MyEvent { /* ... */ };
+    ///         return new List&lt;IEvent&gt; { newEvent };
+    ///     },
+    ///     cancellationToken);
+    /// if (result.IsFailed)
+    /// {
+    ///     // Handle errors
+    ///     return;
+    /// }
+    /// var updatedAggregate = result.Value;
+    /// // work with the updated aggregate
+    /// </code>
+    /// </example>
     public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Task<List<IEvent>>> update, CancellationToken cancellationToken = default)
     {
         // Get the event stream for the aggregate
@@ -110,9 +158,6 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
             }
         }
         
-        // TODO: Should I save the events only when there are no errors in the projections? Or should I save them anyway and just log the errors?
-        // I could leave it like it is, so that the events are not saved if there are errors in the projections - but this way I can decide in the projection if it is important enough to not save the events.
-        
         // Save the event stream
         var saveResult = await eventStream.SaveAsync(cancellationToken);
         if (saveResult.IsFailed)
@@ -120,7 +165,8 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         
         return Result.Ok(updateAggregateResult.Value);
     }
-
+    
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
     public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, List<IEvent>> update, CancellationToken cancellationToken = default)
     {
         return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
@@ -197,125 +243,5 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         }
 
         return aggregate == null ? new Error("Aggregate could not be created from events") : Result.Ok(aggregate);
-    }
-}
-
-public interface IProjector<TAggregate> where TAggregate : IAggregate
-{
-    //TODO: Return a transaction object or something similar to save the state/model of the projection in a transaction if needed.
-    /// <summary>
-    /// This method projects the events to a new state or model.
-    /// <para>
-    /// When the event returns a Result.Fail, the events of the latest action are not saved.
-    /// </para>
-    /// </summary>
-    /// <param name="state"></param>
-    /// <param name="event"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<Result> ProjectAsync(TAggregate state, IEvent @event, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// This has to be source generated
-/// </summary>
-/// <typeparam name="TAggregate"></typeparam>
-public class MyTestAggregatorProjector : IProjector<MyTestAggregate> 
-{
-    private readonly CreatedEventProjection _createdEventProjection;
-    private readonly ChangedNameEventProjection _changedNameEventProjection;
-
-    /// <summary>
-    /// Events must be registered
-    /// </summary>
-    /// <param name="createdEventProjection"></param>
-    /// <param name="changedNameEventProjection"></param>
-    public MyTestAggregatorProjector(CreatedEventProjection createdEventProjection, ChangedNameEventProjection changedNameEventProjection)
-    {
-        _createdEventProjection = createdEventProjection;
-        _changedNameEventProjection = changedNameEventProjection;
-    }
-    
-    public async Task<Result> ProjectAsync(MyTestAggregate state, IEvent @event, CancellationToken cancellationToken = default)
-    {
-        return @event.GetType() switch
-        {
-            {  } type when type == typeof(CreatedEvent) => await Result.Try(() => _createdEventProjection.ProjectAsync(state, (CreatedEvent)@event, cancellationToken)),
-            {  } type when type == typeof(ChangedNameEvent) => await Result.Try(() => _changedNameEventProjection.ProjectAsync(state, (ChangedNameEvent)@event, cancellationToken)),
-            _ => Result.Fail($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.")
-        };
-        
-        // TODO: Return some Transaction-Instance so that I can save the state/model of the projection in a transaction if needed!
-    }
-}
-
-public interface IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
-{
-    Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
-}
-
-
-/// <summary>
-/// This has to be source generated (without constructor)
-/// </summary>
-public partial class CreatedEventProjection : AbstractProjection<MyTestAggregate, CreatedEvent>
-{
-    
-}
-
-/// <summary>
-/// This has to be manually implemented
-/// </summary>
-public partial class CreatedEventProjection
-{
-    private readonly ILogger<CreatedEventProjection> _logger;
-
-    public CreatedEventProjection(ILogger<CreatedEventProjection> logger)
-    {
-        _logger = logger;
-    }
-    
-    public override Task ProjectAsync(MyTestAggregate state, CreatedEvent @event, CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Projecting CreatedEvent for aggregate {AggregateId}", state.Id);
-        return Task.CompletedTask;
-    }
-}
-
-/// <summary>
-/// This has to be source generated (without constructor)
-/// </summary>
-public partial class ChangedNameEventProjection : AbstractProjection<MyTestAggregate, ChangedNameEvent>
-{
-
-}
-
-/// <summary>
-/// This has to be manually implemented
-/// </summary>
-public partial class ChangedNameEventProjection
-{
-    // This is a manually implemented projection for the ChangedNameEvent.
-    // It can be used to log or perform additional actions when the name of the aggregate changes.
-
-    private readonly ILogger<ChangedNameEventProjection> _logger;
-
-    public ChangedNameEventProjection(ILogger<ChangedNameEventProjection> logger)
-    {
-        _logger = logger;
-    }
-
-    public override Task ProjectAsync(MyTestAggregate state, ChangedNameEvent @event, CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Projecting ChangedNameEvent for aggregate {AggregateId}", state.Id);
-        return Task.CompletedTask;
-    }
-}
-
-public abstract class AbstractProjection<TAggregate, TEvent> : IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
-{
-    public virtual Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.");
     }
 }

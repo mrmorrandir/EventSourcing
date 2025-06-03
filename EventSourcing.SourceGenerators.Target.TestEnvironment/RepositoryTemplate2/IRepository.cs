@@ -5,8 +5,8 @@ namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTempla
 
 public interface IRepository<TAggregate> where TAggregate : IAggregate
 {
-    Task<Result<TAggregate>> CreateAsync(Func<Task<CreatedEvent>> create, CancellationToken cancellationToken = default);
-    Task<Result<TAggregate>> CreateAsync(Func<CreatedEvent> create, CancellationToken cancellationToken = default);
+    Task<Result<TAggregate>> CreateAsync(Func<Task<IEvent>> create, CancellationToken cancellationToken = default);
+    Task<Result<TAggregate>> CreateAsync(Func<IEvent> create, CancellationToken cancellationToken = default);
     Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Task<List<IEvent>>> update, CancellationToken cancellationToken = default);
     Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, List<IEvent>> update, CancellationToken cancellationToken = default);
 }
