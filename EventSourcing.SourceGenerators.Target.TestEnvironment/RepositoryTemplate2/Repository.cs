@@ -103,56 +103,53 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         
         var eventStream = getResult.Value;
         
-        var eventsResult = CreateEventsFromEntities(eventStream.Events);
-        if (eventsResult.IsFailed)
-            return new Error("Failed to create events from event entities").CausedBy(eventsResult.Errors);
+        var originalEventsResult = CreateEventsFromEntities(eventStream.Events);
+        if (originalEventsResult.IsFailed)
+            return new Error("Failed to create events from event entities").CausedBy(originalEventsResult.Errors);
         
         // Create the aggregate from the events in the stream
-        var aggregateResult = CreateAggregateFromEvents(eventsResult.Value);
-        if (aggregateResult.IsFailed)
-            return aggregateResult.ToResult();
+        var originalAggregateResult = CreateAggregateFromEvents(originalEventsResult.Value);
+        if (originalAggregateResult.IsFailed)
+            return originalAggregateResult.ToResult();
         
-        var aggregate = aggregateResult.Value;
+        var originalAggregate = originalAggregateResult.Value;
         
         // Execute the update function to get the new events
-        var updateResult = await Result.Try(() => update(aggregate));
-        if (updateResult.IsFailed)
-            return new Error("Failed to update aggregate").CausedBy(updateResult.Errors);
+        var updateFunctionResult = await Result.Try(() => update(originalAggregate));
+        if (updateFunctionResult.IsFailed)
+            return new Error("Failed to update aggregate").CausedBy(updateFunctionResult.Errors);
 
         // Check if there are any new events to append
-        var newEvents = updateResult.Value.ToList();
+        var newEvents = updateFunctionResult.Value.ToList();
         if (newEvents.Count == 0)
-            return Result.Ok(aggregate).WithSuccess("No changes made to the aggregate, nothing to save.");
+            return Result.Ok(originalAggregate).WithSuccess("No changes made to the aggregate, nothing to save.");
 
         // Append the new events to the event stream
         var expectedVersion = eventStream.BaseVersion;
-        foreach (var evt in newEvents)
+        foreach (var newEvent in newEvents)
         {
-            var serializeResult = _serializationRegistry.Serialize(evt);
-            if (serializeResult.IsFailed)
-                return new Error($"Failed to serialize event of type {evt.GetType().Name}").CausedBy(serializeResult.Errors);
+            var newSerializedEventResult = _serializationRegistry.Serialize(newEvent);
+            if (newSerializedEventResult.IsFailed)
+                return new Error($"Failed to serialize event of type {newEvent.GetType().Name}").CausedBy(newSerializedEventResult.Errors);
 
-            var serializedEvent = serializeResult.Value;
-            var eventEntity = new EventEntity(evt.AggregateId, ++expectedVersion, serializedEvent.Schema, serializedEvent.Data);
-            var appendResult = await eventStream.AppendAsync(eventEntity, cancellationToken);
+            var newSerializedEvent = newSerializedEventResult.Value;
+            var newEventEntity = new EventEntity(newEvent.AggregateId, ++expectedVersion, newSerializedEvent.Schema, newSerializedEvent.Data);
+            var appendResult = await eventStream.AppendAsync(newEventEntity, cancellationToken);
             if (appendResult.IsFailed)
                 return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
         }
-
-        var eventsResultUpdated = CreateEventsFromEntities(eventStream.Events);
-        if (eventsResultUpdated.IsFailed)
-            return new Error("Failed to create events from event entities").CausedBy(eventsResultUpdated.Errors);
         
-        var updateAggregateResult = CreateAggregateFromEvents(eventsResultUpdated.Value);
-        if (updateAggregateResult.IsFailed)
-            return new Error("Failed to update aggregate from events").CausedBy(updateAggregateResult.Errors);
+        var updatedAggregateResult = CreateAggregateFromEvents(originalEventsResult.Value.Concat(newEvents));
+        if (updatedAggregateResult.IsFailed)
+            return new Error("Failed to update aggregate from events").CausedBy(updatedAggregateResult.Errors);
         
+        var updatedAggregate = updatedAggregateResult.Value;
         // Project the new events
         foreach (var projector in _projectors)
         {
             foreach (var evt in newEvents)
             {
-                var projectionResult = await projector.ProjectAsync(aggregate, evt, cancellationToken);
+                var projectionResult = await projector.ProjectAsync(updatedAggregate, evt, cancellationToken);
                 if (projectionResult.IsFailed)
                     return new Error($"Failed to project event of type {evt.GetType().Name}").CausedBy(projectionResult.Errors);
             }
@@ -162,8 +159,8 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         var saveResult = await eventStream.SaveAsync(cancellationToken);
         if (saveResult.IsFailed)
             return new Error("Failed to save event stream").CausedBy(saveResult.Errors);
-        
-        return Result.Ok(updateAggregateResult.Value);
+
+        return Result.Ok(updatedAggregate);
     }
     
     /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
@@ -185,24 +182,29 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
             return new Error($"Failed to serialize event of type {createdEvent.GetType().Name}").CausedBy(serializeResult.Errors);
         
         var serializedEvent = serializeResult.Value;
-        var eventData = new EventEntity(createdEvent.AggregateId, 1, serializedEvent.Schema, serializedEvent.Data);
+        var eventEntity = new EventEntity(createdEvent.AggregateId, 1, serializedEvent.Schema, serializedEvent.Data);
         
-        var appendResult = await eventStream.AppendAsync(eventData, cancellationToken);
+        var appendResult = await eventStream.AppendAsync(eventEntity, cancellationToken);
         if (appendResult.IsFailed)
             return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
         
+        var createAggregateResult = CreateAggregateFromEvents([createdEvent]);
+        if (createAggregateResult.IsFailed)
+            return new Error("Failed to create aggregate from events").CausedBy(createAggregateResult.Errors);
+        
+        // Project the new events
+        foreach (var projector in _projectors)
+        {
+            var projectionResult = await projector.ProjectAsync(createAggregateResult.Value, createdEvent, cancellationToken);
+            if (projectionResult.IsFailed)
+                return new Error($"Failed to project event of type {createdEvent.GetType().Name}").CausedBy(projectionResult.Errors);
+        }
+
+        // Save the event stream
         var saveResult = await eventStream.SaveAsync(cancellationToken);
         if (saveResult.IsFailed)
             return new Error("Failed to save event stream").CausedBy(saveResult.Errors);
-
-        var eventsResult = CreateEventsFromEntities(eventStream.Events);
-        if (eventsResult.IsFailed)
-            return new Error("Failed to create events from event entities").CausedBy(eventsResult.Errors);
         
-        var createAggregateResult = CreateAggregateFromEvents(eventsResult.Value);
-        if (createAggregateResult.IsFailed)
-            return new Error("Failed to create aggregate from events").CausedBy(createAggregateResult.Errors);
-
         return createAggregateResult.Value;
     }
 
@@ -243,125 +245,5 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         }
 
         return aggregate == null ? new Error("Aggregate could not be created from events") : Result.Ok(aggregate);
-    }
-}
-
-public interface IProjector<TAggregate> where TAggregate : IAggregate
-{
-    //TODO: Return a transaction object or something similar to save the state/model of the projection in a transaction if needed.
-    /// <summary>
-    /// This method projects the events to a new state or model.
-    /// <para>
-    /// When the event returns a Result.Fail, the events of the latest action are not saved.
-    /// </para>
-    /// </summary>
-    /// <param name="state"></param>
-    /// <param name="event"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<Result> ProjectAsync(TAggregate state, IEvent @event, CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// This has to be source generated
-/// </summary>
-/// <typeparam name="TAggregate"></typeparam>
-public class MyTestAggregatorProjector : IProjector<MyTestAggregate> 
-{
-    private readonly CreatedEventProjection _createdEventProjection;
-    private readonly ChangedNameEventProjection _changedNameEventProjection;
-
-    /// <summary>
-    /// Events must be registered
-    /// </summary>
-    /// <param name="createdEventProjection"></param>
-    /// <param name="changedNameEventProjection"></param>
-    public MyTestAggregatorProjector(CreatedEventProjection createdEventProjection, ChangedNameEventProjection changedNameEventProjection)
-    {
-        _createdEventProjection = createdEventProjection;
-        _changedNameEventProjection = changedNameEventProjection;
-    }
-    
-    public async Task<Result> ProjectAsync(MyTestAggregate state, IEvent @event, CancellationToken cancellationToken = default)
-    {
-        return @event.GetType() switch
-        {
-            {  } type when type == typeof(CreatedEvent) => await Result.Try(() => _createdEventProjection.ProjectAsync(state, (CreatedEvent)@event, cancellationToken)),
-            {  } type when type == typeof(ChangedNameEvent) => await Result.Try(() => _changedNameEventProjection.ProjectAsync(state, (ChangedNameEvent)@event, cancellationToken)),
-            _ => Result.Fail($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.")
-        };
-        
-        // TODO: Return some Transaction-Instance so that I can save the state/model of the projection in a transaction if needed!
-    }
-}
-
-public interface IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
-{
-    Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
-}
-
-
-/// <summary>
-/// This has to be source generated (without constructor)
-/// </summary>
-public partial class CreatedEventProjection : AbstractProjection<MyTestAggregate, CreatedEvent>
-{
-    
-}
-
-/// <summary>
-/// This has to be manually implemented
-/// </summary>
-public partial class CreatedEventProjection
-{
-    private readonly ILogger<CreatedEventProjection> _logger;
-
-    public CreatedEventProjection(ILogger<CreatedEventProjection> logger)
-    {
-        _logger = logger;
-    }
-    
-    public override Task ProjectAsync(MyTestAggregate state, CreatedEvent @event, CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Projecting CreatedEvent for aggregate {AggregateId}", state.Id);
-        return Task.CompletedTask;
-    }
-}
-
-/// <summary>
-/// This has to be source generated (without constructor)
-/// </summary>
-public partial class ChangedNameEventProjection : AbstractProjection<MyTestAggregate, ChangedNameEvent>
-{
-
-}
-
-/// <summary>
-/// This has to be manually implemented
-/// </summary>
-public partial class ChangedNameEventProjection
-{
-    // This is a manually implemented projection for the ChangedNameEvent.
-    // It can be used to log or perform additional actions when the name of the aggregate changes.
-
-    private readonly ILogger<ChangedNameEventProjection> _logger;
-
-    public ChangedNameEventProjection(ILogger<ChangedNameEventProjection> logger)
-    {
-        _logger = logger;
-    }
-
-    public override Task ProjectAsync(MyTestAggregate state, ChangedNameEvent @event, CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Projecting ChangedNameEvent for aggregate {AggregateId}", state.Id);
-        return Task.CompletedTask;
-    }
-}
-
-public abstract class AbstractProjection<TAggregate, TEvent> : IProjection<TAggregate, TEvent> where TAggregate : IAggregate where TEvent : IEvent
-{
-    public virtual Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.");
     }
 }

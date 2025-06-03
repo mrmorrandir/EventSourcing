@@ -2,6 +2,7 @@
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
+using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
