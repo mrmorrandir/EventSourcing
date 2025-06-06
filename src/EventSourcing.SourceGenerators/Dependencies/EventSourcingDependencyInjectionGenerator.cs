@@ -92,7 +92,7 @@ public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
         sb.AppendLine("    /// <item><see cref=\"RepositoryDependencyInjection.AddRepositories\"/></item>");
         sb.AppendLine("    /// <item><see cref=\"SerializationDependencyInjection.AddSerialization\"/></item>");
         sb.AppendLine("    /// <item><see cref=\"AggregatorsDependencyInjection.AddAggregators\"/></item>");
-        sb.AppendLine("    /// <item><see cref=\"ProjectionsDependencyInjection.AddProjections\"/></item>");
+        sb.AppendLine("    /// <item><see cref=\"ProjectorsDependencyInjection.AddProjectors\"/></item>");
         sb.AppendLine("    /// </list>");
         sb.AppendLine("    /// </para>");
         sb.AppendLine("    /// </summary>");
@@ -101,7 +101,7 @@ public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
         sb.AppendLine("        services.AddRepositories();");
         sb.AppendLine("        services.AddSerialization();");
         sb.AppendLine("        services.AddAggregators();");
-        sb.AppendLine("        //services.AddProjections();");
+        sb.AppendLine("        services.AddProjectors();");
         sb.AppendLine("    }");
         sb.AppendLine("}");
         
