@@ -30,7 +30,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     /// <summary>
     ///     Creates a new aggregate by executing the provided creation function (<paramref name="create"/> and saving the resulting event.
     ///     <para>
-    ///     The creation function should return a <see cref="CreatedEvent"/> representing the creation of the aggregate.
+    ///     The creation function should return an <see cref="IEvent"/> representing the creation of the aggregate.
     ///     </para>
     ///     <para>
     ///     If the creation fails or an error occurs during event serialization, appending, or saving, a failed result is returned with error details.
