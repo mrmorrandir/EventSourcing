@@ -46,7 +46,7 @@ public class MyTestAggregateSerializationRegistry : ISerializationRegistry<MyTes
     public Result<IEvent> Deserialize(string schema, string data)
     {
         if (!_deserializers.TryGetValue(schema, out var deserializer))
-            throw new EventRegistryException($"No deserializer found for type {schema}");
+            return new Error($"No deserializer found for type {schema}");
 
         return Result.Try(() => deserializer(schema, data));
     }

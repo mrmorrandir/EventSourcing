@@ -1,8 +1,12 @@
-﻿using EventSourcing.Contexts;
+﻿using EventSourcing;
+using EventSourcing.Contexts;
+using EventSourcing.Mappers;
+using EventSourcing.Repositories;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
+using EventSourcing.Stores;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -15,7 +19,7 @@ builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options
     .UseInMemoryDatabase("TestEnvironment")
     // Configure the context to ignore transaction warnings
     .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))); 
-builder.Services.AddScoped<IEventStoreX, EventStoreX>();
+builder.Services.AddScoped<IEventStore, EventStore>();
 builder.Services.AddScoped<MyTestAggregateRepository>();
 builder.Services.AddScoped<IRepository<MyTestAggregate>>(sp => sp.GetRequiredService<MyTestAggregateRepository>());
 builder.Services.AddScoped<IAggregator<MyTestAggregate>, MyTestAggregateAggregator>();

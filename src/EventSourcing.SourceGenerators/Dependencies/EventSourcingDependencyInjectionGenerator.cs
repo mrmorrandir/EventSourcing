@@ -1,0 +1,120 @@
+﻿using System.Collections.Immutable;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+
+namespace EventSourcing.SourceGenerators.Dependencies;
+
+[Generator]
+public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        var repositories = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: (s, _) => IsRepositoryCandidate(s),
+                transform: (ctx, _) => GetRepositoryInfo(ctx))
+            .Where(info => info is not null);
+
+        context.RegisterSourceOutput(repositories.Collect(), (spc, infos) =>
+        {
+            if (infos.IsDefaultOrEmpty)
+                return;
+            
+            var repositoryDependencyInjectionSource = CreateRepositoryDependencyInjectionSource(infos!);
+            spc.AddSource($"EventSourcingDependencyInjection.g.cs", SourceText.From(repositoryDependencyInjectionSource, Encoding.UTF8));
+        });
+    }
+    private static bool IsRepositoryCandidate(SyntaxNode node)
+    {
+        if (node is not ClassDeclarationSyntax classDecl)
+            return false;
+
+        // Must be partial
+        if (!classDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
+            return false;
+
+        // Must have a base list (implements or inherits)
+        if (classDecl.BaseList == null)
+            return false;
+
+        // Must implement IAggregateRepository<T>
+        return classDecl.BaseList.Types
+            .Any(t => t.Type.ToString().StartsWith("IRepository<"));
+    }
+    
+    private static RepositoryInfo? GetRepositoryInfo(GeneratorSyntaxContext context)
+    {
+        var classSyntax = (ClassDeclarationSyntax)context.Node;
+        var model = context.SemanticModel;
+        var classSymbol = model.GetDeclaredSymbol(classSyntax) as INamedTypeSymbol;
+        if (classSymbol == null)
+            return null;
+
+        // Find IAggregateRepository<T>
+        var repoInterface = classSymbol.AllInterfaces
+            .FirstOrDefault(i =>
+                i.OriginalDefinition.ToDisplayString() == "EventSourcing.Repositories.IRepository<TAggregate>");
+
+        if (repoInterface == null)
+            return null;
+
+        var aggregateType = repoInterface.TypeArguments.FirstOrDefault() as INamedTypeSymbol;
+        if (aggregateType == null)
+            return null;
+
+        return new RepositoryInfo
+        {
+            AggregateNamespace = aggregateType.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
+            AggregateName = aggregateType.Name,
+            AggregateFullName = aggregateType.ToDisplayString(),
+            RepositoryNamespace = classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
+            RepositoryName = classSymbol.Name,
+            RepositoryFullName = classSymbol.ToDisplayString(),
+        };
+    }
+    private static string CreateRepositoryDependencyInjectionSource(ImmutableArray<RepositoryInfo> infos)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine();
+        sb.AppendLine("namespace Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine();
+        sb.AppendLine("public static partial class EventSourcingDependencyInjection");
+        sb.AppendLine("{");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// <para>Register everything for the EventSourcing Infrastructure</para>");
+        sb.AppendLine("    /// <para>Use this method in your infrastructure dependency injection to register everything at once</para>");
+        sb.AppendLine("    /// <para>");
+        sb.AppendLine("    /// Calls:");
+        sb.AppendLine("    /// <list type=\"bullet\">");
+        sb.AppendLine("    /// <item><see cref=\"RepositoryDependencyInjection.AddRepositories\"/></item>");
+        sb.AppendLine("    /// <item><see cref=\"SerializationDependencyInjection.AddSerialization\"/></item>");
+        sb.AppendLine("    /// <item><see cref=\"AggregatorsDependencyInjection.AddAggregators\"/></item>");
+        sb.AppendLine("    /// <item><see cref=\"ProjectionsDependencyInjection.AddProjections\"/></item>");
+        sb.AppendLine("    /// </list>");
+        sb.AppendLine("    /// </para>");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public static void AddEventSourcing(this IServiceCollection services)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        services.AddRepositories();");
+        sb.AppendLine("        services.AddSerialization();");
+        sb.AppendLine("        services.AddAggregators();");
+        sb.AppendLine("        //services.AddProjections();");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        
+        return sb.ToString();
+    }
+
+    private class RepositoryInfo 
+    {
+        public string AggregateNamespace = "";
+        public string AggregateName = "";
+        public string AggregateFullName = "";
+        public string RepositoryNamespace = "";
+        public string RepositoryName = "";
+        public string RepositoryFullName = "";
+    }
+}

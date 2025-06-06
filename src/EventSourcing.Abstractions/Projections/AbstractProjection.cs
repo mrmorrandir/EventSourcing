@@ -1,10 +1,13 @@
 namespace EventSourcing.Projections;
 
+
 /// <summary>
-///     Defines a projection that projects an event of type <typeparamref name="TEvent" /> (coupled with an aggregate of
+///    Abstract base class for a projection that projects an event of type <typeparamref name="TEvent" /> (coupled with an aggregate of
 ///     type <typeparamref name="TAggregate" />) into a user-defined state/model.
 /// </summary>
-public interface IProjection<in TAggregate, in TEvent> where TAggregate : IAggregate where TEvent : IEvent
+public abstract class AbstractProjection<TAggregate, TEvent> : IProjection<TAggregate, TEvent>
+    where TAggregate : IAggregate
+    where TEvent : IEvent
 {
     /// <summary>
     ///     Projects the specified <paramref name="event" /> into a user-defined state/model.
@@ -16,5 +19,11 @@ public interface IProjection<in TAggregate, in TEvent> where TAggregate : IAggre
     /// <param name="event">The event to project.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>A task representing the asynchronous projection operation.</returns>
-    Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
+    /// <exception cref="NotImplementedException">
+    /// Thrown if the projection is not implemented for the given event and aggregate type.
+    /// </exception>
+    public virtual Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.");
+    }
 }

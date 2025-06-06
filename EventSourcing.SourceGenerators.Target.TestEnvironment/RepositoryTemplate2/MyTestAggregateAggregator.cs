@@ -1,5 +1,6 @@
 ﻿using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
+using FluentResults;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 
@@ -8,23 +9,23 @@ namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTempla
 /// </summary>
 public class MyTestAggregateAggregator : IAggregator<MyTestAggregate>
 {
-    public MyTestAggregate CreateFromEvent(IEvent evt)
+    public Result<MyTestAggregate> CreateFromEvent(IEvent evt)
     {
         return evt switch
         {
-            CreatedEvent e => MyTestAggregate.Create(e),
-            _ => throw new InvalidOperationException($"Unknown event type: {evt.GetType().Name}")
+            CreatedEvent e => Result.Try(() => MyTestAggregate.Create(e)),
+            _ => new Error($"Unknown event type: {evt.GetType().Name}")
         };
     }
 
-    public MyTestAggregate ApplyEvent(MyTestAggregate aggregate, IEvent evt)
+    public Result<MyTestAggregate> ApplyEvent(MyTestAggregate aggregate, IEvent evt)
     {
         return evt switch
         {
-            ChangedNameEvent e => aggregate.Apply(e),
-            ChangedDescriptionEvent e => aggregate.Apply(e),
-            DeletedEvent e => aggregate.Apply(e),
-            _ => throw new InvalidOperationException($"Unknown event type: {evt.GetType().Name}")
+            ChangedNameEvent e => Result.Try(() => aggregate.Apply(e)),
+            ChangedDescriptionEvent e => Result.Try(() => aggregate.Apply(e)),
+            DeletedEvent e => Result.Try(() => aggregate.Apply(e)),
+            _ => new Error($"Unknown event type: {evt.GetType().Name}")
         };
     }
 }

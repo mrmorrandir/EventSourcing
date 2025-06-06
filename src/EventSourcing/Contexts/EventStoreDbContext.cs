@@ -8,6 +8,8 @@ public class EventStoreDbContext : DbContext, IEventStoreDbContext
 {
     public DbSet<EventEntity> Events { get; set; }
     
+    public DbSet<StateEntity> States { get; set; }
+    
     public EventStoreDbContext(DbContextOptions<EventStoreDbContext> options) : base(options) 
     {
         
@@ -30,6 +32,9 @@ public class EventStoreDbContext : DbContext, IEventStoreDbContext
             .Property(e => e.Data);
         modelBuilder.Entity<EventEntity>()
             .HasIndex(e => e.Created);
+        
+        modelBuilder.Entity<StateEntity>()
+            .HasKey(s => s.StreamId);
 
         base.OnModelCreating(modelBuilder);
     }

@@ -1,4 +1,5 @@
-﻿using EventSourcing.SourceGenerators.Target.Domain;
+﻿using EventSourcing.Projections;
+using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.Events;
 using FluentResults;
 

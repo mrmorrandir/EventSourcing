@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace EventSourcing.SourceGenerators;
 
-[Generator]
+//[Generator]
 public partial class AggregateFullRepositoryGenerator : IIncrementalGenerator
 {
     [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*-v[0-9]+$")]

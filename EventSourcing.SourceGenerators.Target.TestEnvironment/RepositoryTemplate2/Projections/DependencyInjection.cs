@@ -1,4 +1,5 @@
-﻿using EventSourcing.SourceGenerators.Target.Domain;
+﻿using EventSourcing.Projections;
+using EventSourcing.SourceGenerators.Target.Domain;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
