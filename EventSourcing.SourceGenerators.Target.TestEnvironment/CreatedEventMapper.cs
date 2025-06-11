@@ -1,5 +1,5 @@
 ﻿using EventSourcing.Mappers;
-using EventSourcing.SourceGenerators.Target.Domain.Events;
+using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment;
 

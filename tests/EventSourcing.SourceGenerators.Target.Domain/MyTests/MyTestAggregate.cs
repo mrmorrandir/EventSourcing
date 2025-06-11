@@ -1,4 +1,4 @@
-﻿using EventSourcing.SourceGenerators.Target.Domain.Events;
+﻿using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
 
 namespace EventSourcing.SourceGenerators.Target.Domain;
 

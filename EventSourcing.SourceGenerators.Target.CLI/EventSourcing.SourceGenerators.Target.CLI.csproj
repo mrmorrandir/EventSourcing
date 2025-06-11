@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\src\EventSourcing.Publishers.RabbitMQ\EventSourcing.Publishers.RabbitMQ.csproj" />
       <ProjectReference Include="..\tests\EventSourcing.SourceGenerators.Target.Infrastructure\EventSourcing.SourceGenerators.Target.Infrastructure.csproj" />
     </ItemGroup>
 

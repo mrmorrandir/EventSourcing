@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventSourcing.FunctionTests.DI;
 
-public class DependencyInjectionTests
+public class RabbitMqPublishingDependencyInjectionTests
 {
     [Fact]
     public void RegistrationShouldWork_WhenEventsAndMappersAndProjectionsAreCorrect()

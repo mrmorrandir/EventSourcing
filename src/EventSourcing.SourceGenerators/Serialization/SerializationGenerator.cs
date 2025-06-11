@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
@@ -191,8 +192,8 @@ public partial class SerializationGenerator : IIncrementalGenerator
         sb.AppendLine( "{");
         sb.AppendLine($"    public {mapperInfo.MapperName}()");
         sb.AppendLine( "    {");
-        sb.AppendLine($"        WillSerialize(\"{mapperInfo.EventKebabCaseName}\");");
-        sb.AppendLine($"        CanDeserialize(\"{mapperInfo.EventKebabCaseName}\");");
+        sb.AppendLine($"        WillSerialize(\"{aggregateInfo.AggregateName.ToLower(CultureInfo.InvariantCulture)}-{mapperInfo.EventKebabCaseName}\");");
+        sb.AppendLine($"        CanDeserialize(\"{aggregateInfo.AggregateName.ToLower(CultureInfo.InvariantCulture)}-{mapperInfo.EventKebabCaseName}\");");
         sb.AppendLine($"        Configure();");
         sb.AppendLine( "    }");
         sb.AppendLine();

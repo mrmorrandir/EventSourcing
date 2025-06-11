@@ -1,6 +1,6 @@
 ﻿using EventSourcing.Projections;
 using EventSourcing.SourceGenerators.Target.Domain;
-using EventSourcing.SourceGenerators.Target.Domain.Events;
+using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
 using FluentResults;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;

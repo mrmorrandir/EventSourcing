@@ -3,7 +3,7 @@ using EventSourcing.Contexts;
 using EventSourcing.Mappers;
 using EventSourcing.Repositories;
 using EventSourcing.SourceGenerators.Target.Domain;
-using EventSourcing.SourceGenerators.Target.Domain.Events;
+using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2;
 using EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
 using EventSourcing.Stores;

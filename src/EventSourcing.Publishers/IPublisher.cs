@@ -1,6 +1,5 @@
-﻿namespace EventSourcing.Publishers;
+﻿using EventSourcing.Projections;
 
-public interface IPublisher<TEvent> : IEventHandler<TEvent> where TEvent : IEvent
-{
-    Task PublishAsync(TEvent @event, CancellationToken cancellationToken = default);
-}
+namespace EventSourcing.Publishers;
+
+public interface IPublisher<in TAggregate> : IProjector<TAggregate> where TAggregate : IAggregate { }

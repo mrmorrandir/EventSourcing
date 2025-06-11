@@ -14,7 +14,7 @@ using RabbitMQ.Client.Exceptions;
 
 namespace EventSourcing.Publishers.RabbitMQ.IntegrationTests;
 
-public class PublisherTests : IAsyncLifetime
+public class RabbitMqEventPublisherTests : IAsyncLifetime
 {
     private IContainer? _rabbitMqContainer;
 
