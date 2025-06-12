@@ -1,127 +1,153 @@
-using System.Reflection;
-using System.Security.Authentication.ExtendedProtection;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Text.Json;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using EventSourcing.Mappers;
-using EventSourcing.Publishers.RabbitMQPublisher;
-using Microsoft.EntityFrameworkCore;
+using EventSourcing.Projections;
+using EventSourcing.Publishers.RabbitMQ.IntegrationTests.Aggregates;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using Testcontainers.RabbitMq;
 
 namespace EventSourcing.Publishers.RabbitMQ.IntegrationTests;
 
+[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 public class RabbitMqEventPublisherTests : IAsyncLifetime
 {
     private IContainer? _rabbitMqContainer;
 
-    [Fact]
-    public async Task PublishAsync_ShouldSucceed_WhenDataIsValid()
-    {
-        const string exchangeName = "testExchange";
-        const string queueName = "testQueue";
-        var received = false;
-        RabbitTestEvent? receivedEvent = null;
-        var rabbitMqTestEvent = new RabbitTestEvent(Guid.NewGuid(), "Test");
-        var serviceProvider = GetServices(exchangeName);
-        await serviceProvider.UseRabbitMqPublishing();
-        var eventRegistry = serviceProvider.GetRequiredService<IEventRegistry>();
-        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
-        await using var connection = await connectionFactory.CreateConnectionAsync();
-        await using var channel = await connection.CreateChannelAsync();
-        await channel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, null);
-        await channel.QueueDeclareAsync(queueName, false, false, true, null);
-        await channel.QueueBindAsync(queueName, exchangeName, "#", null);
-        var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.ReceivedAsync += (sender, eventArgs) =>
-        {
-            var json = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-            var type = eventArgs.RoutingKey.Replace(".", "-");
-            var @event = (RabbitTestEvent)eventRegistry.Deserialize(type, json);
-            received = true;
-            receivedEvent = @event;
-            return Task.CompletedTask;
-        };
-        await channel.BasicConsumeAsync(queueName, true, consumer);
-        var publisher = serviceProvider.GetRequiredService<IPublisher<RabbitTestEvent>>();
-
-        await publisher.PublishAsync(rabbitMqTestEvent);
-        
-        await Task.Delay(100);
-        received.Should().BeTrue();
-        receivedEvent.Should().BeEquivalentTo(rabbitMqTestEvent);
-    }
-    
-    [Fact]
-    public async Task ExchangeInitializers_ShouldRegisterExchangeOnStartup()
-    {
-        const string exchangeName = "testExchange";
-        var serviceProvider = GetServices(exchangeName);
-        await serviceProvider.UseRabbitMqPublishing();
-        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
-        await using var connection = await connectionFactory.CreateConnectionAsync();
-
-        await using (var channel = await connection.CreateChannelAsync())
-        {
-            var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
-
-            await func.Should().NotThrowAsync();
-        }
-    }
-    
-    [Fact]
-    public async Task ExchangeInitializers_ShouldNotRegisterExchangeOnStartUp_WhenUseRabbitMQPublishingIsNotCalled()
-    {
-        const string exchangeName = "testExchange";
-        var serviceProvider = GetServices(exchangeName);
-        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
-        await using var connection = await connectionFactory.CreateConnectionAsync();
-
-        await using (var channel = await connection.CreateChannelAsync())
-        {
-            var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
-
-            await func.Should().ThrowAsync<OperationInterruptedException>();
-        }
-    }
-
-    private ServiceProvider GetServices(string exchangeName)
-    {
-        var services = new ServiceCollection();
-        services.AddEventSourcing(config =>
-        {
-            config.ConfigureMapping(options => options.AddMappers(Assembly.GetExecutingAssembly()));
-            config.ConfigureProjections(options => options.IgnoreUncoveredEvents());
-            config.ConfigureEventStoreDbContext(options => options.UseInMemoryDatabase("TestDatabase"));
-            config.AddRabbitMqPublishing(options =>
-            {
-                options.UseConnection("localhost", "guest", "guest");
-                options.UseBaseExchangeName(exchangeName);
-                options.AddPublishers(Assembly.GetExecutingAssembly(), exchangeName);
-            });
-        });
-        var serviceProvider = services.BuildServiceProvider();
-        return serviceProvider;
-    }
-
+    /// <summary>
+    /// Sets up the RabbitMQ container for testing.
+    /// </summary>
     public async Task InitializeAsync()
     {
-        _rabbitMqContainer = new ContainerBuilder()
+        _rabbitMqContainer = new RabbitMqBuilder()
             .WithImage("rabbitmq:4.1-management")
-            .WithPortBinding(5672, 5672)
+            .WithUsername("guest")
+            .WithPassword("guest")
+            .WithHostname("localhost")
+            .WithPortBinding(5672, 5672) // RabbitMQ default port
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
             .Build();
         await _rabbitMqContainer.StartAsync();
     }
 
+    /// <summary>
+    /// Cleans up the RabbitMQ container after tests are completed.
+    /// </summary>
     public async Task DisposeAsync()
     {
         if (_rabbitMqContainer != null)
             await _rabbitMqContainer.DisposeAsync();
     }
-}
+    
+    [Fact]
+    public async Task PublishAsync_ShouldSucceed_WhenDataIsValid()
+    {
+        // Arrange Services
+        const string exchangeName = "testExchange";
+        const string queueName = "testQueue";
+        var serviceProvider = GetServices(exchangeName);
+        await serviceProvider.UseRabbitMqPublishing();
+        
+        // Arrange Variables
+        var testAggregateSerializationRegistry = serviceProvider.GetRequiredService<ISerializationRegistry<TestAggregate>>();
+        var rabbitMqConnectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        var rabbitMqEventProjectors = serviceProvider.GetRequiredService<IEnumerable<IProjector<TestAggregate>>>();
+        var rabbitMqEventPublisher = rabbitMqEventProjectors
+            .Where(p => p is RabbitMqEventPublisher<TestAggregate>)
+            .Cast<RabbitMqEventPublisher<TestAggregate>>()
+            .First();
+        
+        // Arrange RabbitMQ Test Connection
+        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync();
+        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync();
+        await rabbitMqChannel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, null);
+        await rabbitMqChannel.QueueDeclareAsync(queueName, false, false, true, null);
+        await rabbitMqChannel.QueueBindAsync(queueName, exchangeName, "#", null);
+        var rabbitMqConsumer = new AsyncEventingBasicConsumer(rabbitMqChannel);
+        var receivedEventDeserializationResults = new List<Result<IEvent>>();
+        rabbitMqConsumer.ReceivedAsync += (sender, eventArgs) =>
+        {
+            var json = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+            var type = eventArgs.RoutingKey.Replace(".", "-");
+            var deserializeResult = testAggregateSerializationRegistry.Deserialize(type, json);
+            receivedEventDeserializationResults.Add(deserializeResult);            
+            return Task.CompletedTask;
+        };
+        await rabbitMqChannel.BasicConsumeAsync(queueName, true, rabbitMqConsumer);
+        
+        // Arrange Aggregate and Event
+        var testAggregateCreatedEvent = new CreatedEvent(Guid.NewGuid(), "Test Name", "Test Description");
+        var testAggregate = TestAggregate.Create(testAggregateCreatedEvent);
 
-public record RabbitTestEvent(Guid AggregateId, string Text) : IEvent;
+        // Act
+        var projectResult = await rabbitMqEventPublisher.ProjectAsync(testAggregate, testAggregateCreatedEvent);
+        
+        // Assert
+        await Task.Delay(100);
+        projectResult.IsSuccess.Should().BeTrue($"because the event should be published successfully (without errors like {projectResult.Errors.FirstOrDefault()?.Message})");
+        receivedEventDeserializationResults.Should().NotBeEmpty("because we should receive the event in RabbitMQ");
+        receivedEventDeserializationResults.Count.Should().Be(1, "because we published only one event");
+        var receivedEvent = receivedEventDeserializationResults.First();
+        receivedEvent.IsSuccess.Should().BeTrue("because the event should be deserialized successfully");
+        receivedEvent.Value.Should().BeOfType<CreatedEvent>("because we published a CreatedEvent");
+        var createdEvent = (CreatedEvent)receivedEvent.Value;
+        createdEvent.AggregateId.Should().Be(testAggregateCreatedEvent.AggregateId, "because the aggregate ID should match the published event");
+        createdEvent.Name.Should().Be(testAggregateCreatedEvent.Name, "because the name should match the published event");
+        createdEvent.Description.Should().Be(testAggregateCreatedEvent.Description, "because the description should match the published event");
+    }
+    
+    [Fact]
+    public async Task ExchangeInitializers_ShouldRegisterExchangeOnStartup()
+    {
+        // Arrange Services
+        const string exchangeName = "testExchange";
+        var serviceProvider = GetServices(exchangeName);
+        await serviceProvider.UseRabbitMqPublishing();
+        
+        // Arrange RabbitMQ Test Connection
+        var rabbitMqConnectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync();
+        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync();
+        
+        // Act
+        var func = async () => await rabbitMqChannel.ExchangeDeclarePassiveAsync(exchangeName);
+
+        // Assert
+        await func.Should().NotThrowAsync("because the exchange should be registered on startup when UseRabbitMqPublishing is called");
+    }
+    
+    [Fact]
+    public async Task ExchangeInitializers_ShouldNotRegisterExchangeOnStartUp_WhenUseRabbitMQPublishingIsNotCalled()
+    {
+        // Arrange Services
+        const string exchangeName = "testExchange";
+        var serviceProvider = GetServices(exchangeName);
+        // Note: Do not call UseRabbitMqPublishing here to simulate the scenario where the exchange is not registered.
+        
+        // Arrange RabbitMQ Test Connection
+        var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
+        await using var connection = await connectionFactory.CreateConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync();
+
+        // Act
+        var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
+
+        // Assert
+        await func.Should().ThrowAsync<OperationInterruptedException>("because the exchange should not exist if UseRabbitMqPublishing is not called");
+    }
+
+    private ServiceProvider GetServices(string exchangeName)
+    {
+        var services = new ServiceCollection();
+        services.AddRabbitMqPublishing(options => options
+            .UseConnection("localhost", "guest", "guest")
+            .UseBaseExchangeName(exchangeName));
+        services.AddRabbitMqEventPublisher<TestAggregate>();
+        services.AddEventSourcing();
+        return services.BuildServiceProvider();        
+    }
+}
