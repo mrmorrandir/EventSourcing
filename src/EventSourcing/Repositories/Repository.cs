@@ -6,12 +6,28 @@ using FluentResults;
 namespace EventSourcing.Repositories;
 
 /// <summary>
-/// This is a generic repository for aggregates.
-/// <param>
-/// 
-/// </param>
+/// Represents a generic repository for aggregates, providing methods to create and update aggregate roots using event sourcing patterns.
+/// This repository coordinates event storage, serialization, aggregation, and projection to ensure consistency and traceability of aggregate state changes.
+///
+/// The repository requires the following services:
+/// <list type="bullet">
+///   <item>
+///     <description><see cref="IEventStore"/>: Responsible for persisting and retrieving event streams associated with aggregates.</description>
+///   </item>
+///   <item>
+///     <description><see cref="ISerializationRegistry{TAggregate}"/>: Handles serialization and deserialization of events to and from a storable format.</description>
+///   </item>
+///   <item>
+///     <description><see cref="IAggregator{TAggregate}"/>: Reconstructs aggregate instances from event streams and applies new events to existing aggregates.</description>
+///   </item>
+///   <item>
+///     <description><see cref="IEnumerable{IProjector{TAggregate}}"/>: Executes projections for each event, enabling read model updates or side effects.</description>
+///   </item>
+/// </list>
+///
+/// The repository ensures that all operations are transactional and that errors in any step (event creation, serialization, appending, projection, or saving) are reported with detailed error information. It is designed to be used in event-sourced systems where aggregate state is derived from a sequence of events.
 /// </summary>
-/// <typeparam name="TAggregate"></typeparam>
+/// <typeparam name="TAggregate">The type of aggregate root managed by this repository. Must implement <see cref="IAggregate"/>.</typeparam>
 public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : IAggregate
 {
     private readonly IEventStore _eventStore;

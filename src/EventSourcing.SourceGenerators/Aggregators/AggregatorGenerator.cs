@@ -59,6 +59,8 @@ public partial class AggregatorGenerator : IIncrementalGenerator
         sb.AppendLine();
         foreach (var info in infos)
         {
+            if (info is null)
+                continue;
             sb.AppendLine($"// Aggregate {info.AggregateName}");
             sb.AppendLine($"//    Name: {info.AggregateName}");
             sb.AppendLine($"//    Namespace: {info.AggregateNamespace}");

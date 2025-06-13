@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentResults;
 
 namespace EventSourcing.Mappers;
 
