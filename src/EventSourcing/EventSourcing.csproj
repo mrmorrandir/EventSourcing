@@ -10,7 +10,8 @@
         <Version>2.0.0-preview-20250616.1</Version>
         <Description>A small EventSourcing Framework Package.
 
-The persistance is based on the EntityFramworkCore and can be configured via DependencyInjection</Description>
+            The persistance is based on the EntityFramworkCore and can be configured via DependencyInjection
+        </Description>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
@@ -18,39 +19,50 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+
+        <!--SourceLink-->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
+        <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentResults" Version="3.16.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.5" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
-      <PackageReference Include="System.Text.Json" Version="9.0.5" />
+        <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="DI\DependencyInjection.cs" />
-      <Compile Remove="DI\EventMapperAssembly.cs" />
-      <Compile Remove="DI\EventMapperConfig.cs" />
-      <Compile Remove="DI\EventMapperType.cs" />
-      <Compile Remove="DI\EventMappingOptions.cs" />
-      <Compile Remove="DI\EventMappingOptionsBuilder.cs" />
-      <Compile Remove="DI\EventProjectionAssembly.cs" />
-      <Compile Remove="DI\EventProjectionConfig.cs" />
-      <Compile Remove="DI\EventProjectionOptions.cs" />
-      <Compile Remove="DI\EventProjectionOptionsBuilder.cs" />
-      <Compile Remove="DI\EventSourcingOptionsBuilder.cs" />
-      <Compile Remove="DI\ProjectionType.cs" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <PackageReference Include="FluentResults" Version="3.16.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5"/>
+        <PackageReference Include="System.Text.Json" Version="9.0.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="DI\DependencyInjection.cs"/>
+        <Compile Remove="DI\EventMapperAssembly.cs"/>
+        <Compile Remove="DI\EventMapperConfig.cs"/>
+        <Compile Remove="DI\EventMapperType.cs"/>
+        <Compile Remove="DI\EventMappingOptions.cs"/>
+        <Compile Remove="DI\EventMappingOptionsBuilder.cs"/>
+        <Compile Remove="DI\EventProjectionAssembly.cs"/>
+        <Compile Remove="DI\EventProjectionConfig.cs"/>
+        <Compile Remove="DI\EventProjectionOptions.cs"/>
+        <Compile Remove="DI\EventProjectionOptionsBuilder.cs"/>
+        <Compile Remove="DI\EventSourcingOptionsBuilder.cs"/>
+        <Compile Remove="DI\ProjectionType.cs"/>
     </ItemGroup>
 
 </Project>

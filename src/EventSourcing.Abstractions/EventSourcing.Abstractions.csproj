@@ -16,11 +16,17 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReleaseNotes></PackageReleaseNotes>
         <RootNamespace>EventSourcing</RootNamespace>
+
+        <!--SourceLink-->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentResults" Version="3.16.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <PackageReference Include="FluentResults" Version="3.16.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5"/>
     </ItemGroup>
 
 </Project>

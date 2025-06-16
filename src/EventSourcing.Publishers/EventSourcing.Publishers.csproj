@@ -15,10 +15,16 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+        <!--SourceLink-->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj"/>
     </ItemGroup>
 
 </Project>

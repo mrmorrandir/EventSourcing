@@ -7,8 +7,9 @@
         <Version>2.0.0-preview-20250616.1</Version>
         <Title>EventSourcing.Publishers.RabbitMQ</Title>
         <Authors>Andreas Naumann</Authors>
-        <Description>Extend the event sourcing system with RabbitMQ. 
-Events are published with the help of the RabbitMQ.Client library. </Description>
+        <Description>Extend the event sourcing system with RabbitMQ.
+            Events are published with the help of the RabbitMQ.Client library.
+        </Description>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
@@ -16,15 +17,21 @@ Events are published with the help of the RabbitMQ.Client library. </Description
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+        <!--SourceLink-->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <PackageReference Include="RabbitMQ.Client" Version="7.1.2"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Publishers\EventSourcing.Publishers.csproj" />
-      <ProjectReference Include="..\EventSourcing\EventSourcing.csproj" />
+        <ProjectReference Include="..\EventSourcing.Publishers\EventSourcing.Publishers.csproj"/>
+        <ProjectReference Include="..\EventSourcing\EventSourcing.csproj"/>
     </ItemGroup>
 
 </Project>
