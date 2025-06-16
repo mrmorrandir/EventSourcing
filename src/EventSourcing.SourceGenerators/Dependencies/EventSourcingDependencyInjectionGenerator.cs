@@ -77,7 +77,12 @@ public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
     private static string CreateRepositoryDependencyInjectionSource(ImmutableArray<RepositoryInfo> infos)
     {
         var sb = new StringBuilder();
+        sb.AppendLine("using EventSourcing;");
+        sb.AppendLine("using EventSourcing.Stores;");
+        sb.AppendLine("using EventSourcing.Contexts;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
+        sb.AppendLine("using Microsoft.EntityFrameworkCore.Diagnostics;");
         sb.AppendLine();
         sb.AppendLine("namespace Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine();
@@ -96,8 +101,17 @@ public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
         sb.AppendLine("    /// </list>");
         sb.AppendLine("    /// </para>");
         sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    public static void AddEventSourcing(this IServiceCollection services)");
+        sb.AppendLine("    public static void AddEventSourcing(this IServiceCollection services, Action<DbContextOptionsBuilder>? optionsAction = null)");
         sb.AppendLine("    {");
+        sb.AppendLine("        if (optionsAction != null)");
+        sb.AppendLine("            services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(optionsAction);");
+        sb.AppendLine("        else");
+        sb.AppendLine("            services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options");
+        sb.AppendLine("                .UseInMemoryDatabase(\"EventSourcing-Database\")");
+        sb.AppendLine("                // Ignore transaction warnings for in-memory database");
+        sb.AppendLine("                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)));");
+        sb.AppendLine();
+        sb.AppendLine("        services.AddScoped<IEventStore, EventStore>();");
         sb.AppendLine("        services.AddRepositories();");
         sb.AppendLine("        services.AddSerialization();");
         sb.AppendLine("        services.AddAggregators();");

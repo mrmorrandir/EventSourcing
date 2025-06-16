@@ -269,9 +269,6 @@ Examples of how to implement the API layer are not provided here, as they are ou
 To register the repository and its dependencies in the dependency injection container, you can use the `AddEventSourcing` extension method provided by the source generator. 
 This method will register all the necessary services for event sourcing, including the repository, serialization registry, aggregator, and projector.
 
-The only other thing you need to do is to register the `IEventStore` implementation in the dependency injection container. 
-With `EntityFrameworkCore`, you can use the `AddDbContext` method to register the `EventStoreDbContext`:
-
 ```csharp
 using EventSourcing.Contexts;
 using EventSourcing.Stores;
@@ -285,11 +282,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ... reading configuration, setting up logging, etc. ...
 
-builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options
+builder.Services.AddEventSourcing(options => options
     .UseInMemoryDatabase("MyTestDatabase")
-    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))); // Ignore transaction warnings for in-memory database
-builder.Services.AddScoped<IEventStore, EventStore>();
-builder.Services.AddEventSourcing();builder.Services.AddEventSourcing();
+    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+// or 
+//
+// builder.Services.AddEventSourcing();
+//
+// because the above method without the optional parameter will use the `InMemoryDatabase` by default
 
 // ... configure swagger, other services etc. ...
 

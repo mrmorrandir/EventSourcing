@@ -40,29 +40,17 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
 
     <ItemGroup>
       <Compile Remove="DI\DependencyInjection.cs" />
-      <None Include="DI\DependencyInjection.cs" />
       <Compile Remove="DI\EventMapperAssembly.cs" />
-      <None Include="DI\EventMapperAssembly.cs" />
       <Compile Remove="DI\EventMapperConfig.cs" />
-      <None Include="DI\EventMapperConfig.cs" />
       <Compile Remove="DI\EventMapperType.cs" />
-      <None Include="DI\EventMapperType.cs" />
       <Compile Remove="DI\EventMappingOptions.cs" />
-      <None Include="DI\EventMappingOptions.cs" />
       <Compile Remove="DI\EventMappingOptionsBuilder.cs" />
-      <None Include="DI\EventMappingOptionsBuilder.cs" />
       <Compile Remove="DI\EventProjectionAssembly.cs" />
-      <None Include="DI\EventProjectionAssembly.cs" />
       <Compile Remove="DI\EventProjectionConfig.cs" />
-      <None Include="DI\EventProjectionConfig.cs" />
       <Compile Remove="DI\EventProjectionOptions.cs" />
-      <None Include="DI\EventProjectionOptions.cs" />
       <Compile Remove="DI\EventProjectionOptionsBuilder.cs" />
-      <None Include="DI\EventProjectionOptionsBuilder.cs" />
       <Compile Remove="DI\EventSourcingOptionsBuilder.cs" />
-      <None Include="DI\EventSourcingOptionsBuilder.cs" />
       <Compile Remove="DI\ProjectionType.cs" />
-      <None Include="DI\ProjectionType.cs" />
     </ItemGroup>
 
 </Project>

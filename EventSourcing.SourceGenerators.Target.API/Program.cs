@@ -8,11 +8,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<IEventStoreDbContext, EventStoreDbContext>(options => options
+builder.Services.AddEventSourcing(options => options
     .UseInMemoryDatabase("MyTestDatabase")
-    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))); // Ignore transaction warnings for in-memory database
-builder.Services.AddScoped<IEventStore, EventStore>();
-builder.Services.AddEventSourcing();
+    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
