@@ -5,9 +5,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.0.0-beta-2</Version>
         <Title>EventSourcing</Title>
         <Authors>Andreas Naumann</Authors>
+        <Version>2.0.0-preview-20250616.1</Version>
         <Description>A small EventSourcing Framework Package.
 
 The persistance is based on the EntityFramworkCore and can be configured via DependencyInjection</Description>
@@ -17,7 +17,6 @@ The persistance is based on the EntityFramworkCore and can be configured via Dep
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
-        <PackageVersion>2.0.0-preview-20250612.1</PackageVersion>
         <PackageReleaseNotes></PackageReleaseNotes>
     </PropertyGroup>
 

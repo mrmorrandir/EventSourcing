@@ -7,6 +7,17 @@
 
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>2.0.0-preview-20250616.1</Version>
+        <Title>EventSourcing.SourceGenerators</Title>
+        <Authors>Andreas Naumann</Authors>
+        <Copyright>2025 @ Andreas Naumann</Copyright>
+        <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>EventSourcing, Events, EventStore</PackageTags>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>

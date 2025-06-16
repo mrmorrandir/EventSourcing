@@ -41,6 +41,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerators.Target.TestEnvironment.CLI", "tests\EventSourcing.SourceGenerators.Target.TestEnvironment.CLI\EventSourcing.SourceGenerators.Target.TestEnvironment.CLI.csproj", "{12E7AE62-BA40-4D25-AEF2-52A716AE2CB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerators.Target.Application", "EventSourcing.SourceGenerators.Target.Application\EventSourcing.SourceGenerators.Target.Application.csproj", "{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.SourceGenerators.Target.API", "EventSourcing.SourceGenerators.Target.API\EventSourcing.SourceGenerators.Target.API.csproj", "{1F2CDD02-0417-484F-AF8B-EDE8381541DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +65,8 @@ Global
 		{1000EE7E-8FD1-403A-A606-3BAACAB5B1DD} = {682BCBD6-F0CD-45DF-B6B2-3B564BD19041}
 		{AC94E30F-7539-4CE6-8037-5168CC584C2F} = {682BCBD6-F0CD-45DF-B6B2-3B564BD19041}
 		{12E7AE62-BA40-4D25-AEF2-52A716AE2CB8} = {682BCBD6-F0CD-45DF-B6B2-3B564BD19041}
+		{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950} = {682BCBD6-F0CD-45DF-B6B2-3B564BD19041}
+		{1F2CDD02-0417-484F-AF8B-EDE8381541DB} = {682BCBD6-F0CD-45DF-B6B2-3B564BD19041}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7AE166D4-DC27-4D8E-9DD2-D5A48D77D822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -115,5 +121,13 @@ Global
 		{12E7AE62-BA40-4D25-AEF2-52A716AE2CB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12E7AE62-BA40-4D25-AEF2-52A716AE2CB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12E7AE62-BA40-4D25-AEF2-52A716AE2CB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5564D17E-2FDB-4B9B-9CB3-FA3F5D30D950}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F2CDD02-0417-484F-AF8B-EDE8381541DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F2CDD02-0417-484F-AF8B-EDE8381541DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F2CDD02-0417-484F-AF8B-EDE8381541DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F2CDD02-0417-484F-AF8B-EDE8381541DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
