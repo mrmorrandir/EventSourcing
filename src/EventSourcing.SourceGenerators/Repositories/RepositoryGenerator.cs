@@ -104,9 +104,9 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"namespace {info.RepositoryNamespace};");
         sb.AppendLine();
-        sb.AppendLine($"public partial class {info.AggregateName}Repository : Repository<{info.AggregateName}>");
+        sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.AggregateName}Repository(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
+        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -157,12 +157,12 @@ public class RepositoryGenerator : IIncrementalGenerator
         foreach (var info in aggregateInfos)
         {
             sb.AppendLine("    /// <summary>");
-            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.RepositoryFullName}\"/> in the service collection.</para>");
+            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.RepositoryName}\"/> in the service collection.</para>");
             sb.AppendLine("    /// <para>In order to register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
             sb.AppendLine("    /// </summary>");
             sb.AppendLine($"    public static void Add{info.RepositoryName}(this IServiceCollection services)");
             sb.AppendLine("    {");
-            sb.AppendLine($"        services.AddScoped<{info.RepositoryFullName}>();");
+            sb.AppendLine($"        services.AddScoped<{info.RepositoryName}>();");
             sb.AppendLine($"        services.AddScoped<Repository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
             sb.AppendLine($"        services.AddScoped<IRepository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
             sb.AppendLine("    }");

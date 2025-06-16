@@ -3,7 +3,7 @@ using EventSourcing.SourceGenerators.Target.Domain;
 
 namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories.MyTests;
 
-public partial class MyTestAggregateRepository : IRepository<MyTestAggregate>
+public partial class MyTestAggregateRepository: IRepository<MyTestAggregate>
 {
     
 }

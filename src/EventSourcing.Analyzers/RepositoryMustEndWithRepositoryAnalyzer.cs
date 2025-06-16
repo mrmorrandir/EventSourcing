@@ -4,22 +4,22 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace EventSourcing.SourceGenerators.Repositories.Analyzers
+namespace EventSourcing.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class RepositoryMustBePartialAnalyzer : DiagnosticAnalyzer
+    public class RepositoryMustEndWithRepositoryAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "ESSG001";
-        
-        private static readonly DiagnosticDescriptor _rule = new(
+        public const string DiagnosticId = "ESSG002";
+
+        private static readonly DiagnosticDescriptor _rule = new DiagnosticDescriptor(
             DiagnosticId,
-            "Repository classes must be partial",
-            "Class '{0}' inherits from IRepository<T> and must be marked partial",
+            "Repository classes must end with 'Repository'",
+            "Class '{0}' inherits from IRepository<T> and must end with 'Repository'",
             "Usage",
-            DiagnosticSeverity.Error,
+            DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [_rule];
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(_rule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -30,17 +30,22 @@ namespace EventSourcing.SourceGenerators.Repositories.Analyzers
 
         private static void AnalyzeClass(SyntaxNodeAnalysisContext context)
         {
-            var classDecl = (ClassDeclarationSyntax)context.Node;
-            if (classDecl.Modifiers.Any(SyntaxKind.PartialKeyword))
+            var classDecl = context.Node as ClassDeclarationSyntax;
+            if (classDecl == null)
                 return;
 
-            var symbol = context.SemanticModel.GetDeclaredSymbol(classDecl);
+            var symbol = context.SemanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
             if (symbol == null)
                 return;
 
-            foreach (var iface in symbol.AllInterfaces)
+            var allInterfaces = symbol.AllInterfaces;
+            if (allInterfaces == null)
+                return;
+
+            foreach (var iface in allInterfaces)
             {
-                if (iface.OriginalDefinition.ToDisplayString() == "IRepository<T>")
+                var originalDef = iface.OriginalDefinition;
+                if (originalDef.Name == "IRepository" && !symbol.Name.EndsWith("Repository"))
                 {
                     var diagnostic = Diagnostic.Create(_rule, classDecl.Identifier.GetLocation(), symbol.Name);
                     context.ReportDiagnostic(diagnostic);
