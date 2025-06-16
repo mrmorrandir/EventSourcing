@@ -4,10 +4,11 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynAnalyzer>true</IsRoslynAnalyzer>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeBuildOutput>true</IncludeBuildOutput>
+        
         <Title>EventSourcing.Analyzers</Title>
         <Authors>Andreas Naumann</Authors>
-        <Version>2.0.0-preview-20250616.1</Version>
+        <Version>2.0.0-preview-20250616.2</Version>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
@@ -17,7 +18,7 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReleaseNotes></PackageReleaseNotes>
     </PropertyGroup>
-
+    
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
         <PrivateAssets>all</PrivateAssets>
