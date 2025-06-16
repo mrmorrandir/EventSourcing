@@ -390,3 +390,168 @@ Unknown processor
 | Serialize_SourceGeneratedRegistry          | Serialization   |    99.27 ns |  0.606 ns |  0.567 ns |  0.70 |    0.01 | 0.0088 |      - |     112 B |        0.78 |
 
 ```
+
+## 2025.06.16 Benchmarks for EventRegistry
+
+After a longer implementation period I wanted to see how my "new" `EventRegistry` (or better `EventRegistries`) performs compared against each other. I have two implementations in my project now: one that is source-generated like I initially wanted to do it, and one that uses reflection for "fallback".
+
+```
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.26100.4061)
+Unknown processor
+.NET SDK 9.0.300
+  [Host]     : .NET 8.0.17 (8.0.1725.26602), X64 RyuJIT AVX2
+  DefaultJob : .NET 8.0.17 (8.0.1725.26602), X64 RyuJIT AVX2
+
+
+| Method                              | Categories  | Mean       | Error     | StdDev    | Median     | Ratio | RatioSD | Gen0   | Allocated | Alloc Ratio |
+|------------------------------------ |------------ |-----------:|----------:|----------:|-----------:|------:|--------:|-------:|----------:|------------:|
+| Create_ReflectionRegistry           | Create      |   2.988 ns | 0.1695 ns | 0.4809 ns |   2.827 ns |  1.02 |    0.22 | 0.0019 |      24 B |        1.00 |
+| Create_SourceGeneratedRegistry      | Create      |   2.609 ns | 0.0873 ns | 0.0774 ns |   2.613 ns |  0.89 |    0.13 | 0.0019 |      24 B |        1.00 |
+|                                     |             |            |           |           |            |       |         |        |           |             |
+| Deserialize_ReflectionRegistry      | Deserialize | 375.124 ns | 7.4374 ns | 8.2666 ns | 380.355 ns |  1.00 |    0.03 | 0.0401 |     504 B |        1.00 |
+| Deserialize_SourceGeneratedRegistry | Deserialize | 325.084 ns | 6.3753 ns | 6.5469 ns | 325.720 ns |  0.87 |    0.03 | 0.0367 |     464 B |        0.92 |
+|                                     |             |            |           |           |            |       |         |        |           |             |
+| Serialize_ReflectionRegistry        | Serialize   | 239.914 ns | 3.6232 ns | 3.3891 ns | 239.957 ns |  1.00 |    0.02 | 0.0393 |     496 B |        1.00 |
+| Serialize_SourceGeneratedRegistry   | Serialize   | 193.014 ns | 1.9106 ns | 1.7872 ns | 192.643 ns |  0.80 |    0.01 | 0.0362 |     456 B |        0.92 |
+
+// * Legends *
+  Categories  : All categories of the corresponded method, class, and assembly
+  Mean        : Arithmetic mean of all measurements
+  Error       : Half of 99.9% confidence interval
+  StdDev      : Standard deviation of all measurements
+  Median      : Value separating the higher half of all measurements (50th percentile)
+  Ratio       : Mean of the ratio distribution ([Current]/[Baseline])
+  RatioSD     : Standard deviation of the ratio distribution ([Current]/[Baseline])
+  Gen0        : GC Generation 0 collects per 1000 operations
+  Allocated   : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  Alloc Ratio : Allocated memory ratio distribution ([Current]/[Baseline])
+  1 ns        : 1 Nanosecond (0.000000001 sec)
+
+```
+
+I would interpret, that the source-generated `EventRegistry` is slightly faster than the reflection-based one.
+
+Copilot suggests:
+> This benchmark table compares the performance of two EventRegistry implementations: one using reflection and one using source generation.
+> 
+> **Key points:**
+> 
+> - **Create:** Both registries are extremely fast to create (~2.6–3.0 ns), with the source-generated version being slightly faster.  
+> - **Deserialize:** Source-generated registry is about 13% faster (325 ns vs 375 ns) and allocates less memory (464 B vs 504 B).  
+> - **Serialize:** Source-generated registry is about 20% faster (193 ns vs 240 ns) and allocates less memory (456 B vs 496 B).  
+> - **Memory:** Source generation reduces allocations in both serialization and deserialization.  
+> 
+> **Conclusion:**  
+> The source-generated EventRegistry is consistently faster and more memory-efficient than the reflection-based version, especially for serialization and deserialization operations. Creation time is negligible for both.
+
+Code comparison: (first source-generated, then reflection-based)
+
+```csharp
+public class TestAggregateSerializationRegistry : ISerializationRegistry<TestAggregate>
+{
+    private static readonly TestAggregateCreatedEventMapper _createdEventMapper = new();
+    private static readonly TestAggregateNameChangedEventMapper _nameChangedEventMapper = new();
+    private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers = new();
+
+    static TestAggregateSerializationRegistry()
+    {
+        foreach (string schema in _createdEventMapper.Schemas)
+            _deserializers.Add(schema, (typeSchema, data) => _createdEventMapper.Deserialize(typeSchema, data));
+        foreach (string schema in _nameChangedEventMapper.Schemas)
+            _deserializers.Add(schema, (typeSchema, data) => _nameChangedEventMapper.Deserialize(typeSchema, data));
+    }
+
+    public Result<ISerializedEvent> Serialize(IEvent @event)
+    {
+        return @event.GetType() switch
+        {
+            { } type when type == typeof(CreatedEvent) => Result.Try(() => _createdEventMapper.Serialize((CreatedEvent)@event)),
+            { } type when type == typeof(NameChangedEvent) => Result.Try(() => _nameChangedEventMapper.Serialize((NameChangedEvent)@event)),
+            _ => Result.Fail($"No serializer found for type {@event.GetType().Name}")
+        };
+    }
+
+    public Result<IEvent> Deserialize(string schema, string data)
+    {
+        if (!_deserializers.TryGetValue(schema, out var deserializer))
+            return new Error($"No deserializer found for type {schema}");
+
+        return Result.Try(() => deserializer(schema, data));
+    }
+}
+```
+
+versus
+
+```csharp
+public class SerializationRegistry<TAggregate> : ISerializationRegistry<TAggregate> where TAggregate : IAggregate
+{
+    private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers;
+    private static readonly Dictionary<Type, Func<IEvent, ISerializedEvent>> _serializers;
+
+    static SerializationRegistry()
+    {
+        // Use reflection to find the event types that are concerned with this aggregate
+        var aggregateType = typeof(TAggregate);
+        var createMethods = aggregateType
+            .GetMethods()
+            .Where(m => m is { IsPublic: true, IsStatic: true, Name: "Create" } && m.GetParameters().Length == 1 && m.ReturnType == aggregateType)
+            .ToList();
+        var applyMethods = aggregateType
+            .GetMethods()
+            .Where(m => m is { IsPublic: true, IsStatic: false, Name: "Apply" } && m.GetParameters().Length == 1 && m.ReturnType == aggregateType)
+            .ToList();
+        var eventMethods = createMethods.Concat(applyMethods).ToList();
+        var eventTypes = eventMethods.Select(m => m.GetParameters()[0].ParameterType).Distinct().ToList();
+        
+        // Find all event mappers that implement IEventMapper<T> with T = one of the eventTypes 
+        var eventMappers = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .SelectMany(a => a.GetTypes())
+            .Where(t =>
+                t is { IsClass: true, IsAbstract: false } &&
+                t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventMapper<>) && eventTypes.Contains(i.GenericTypeArguments[0])))
+            .Select(t => (IEventMapper)Activator.CreateInstance(t)!)
+            .ToList();
+        
+        // Create serializers and deserializers for each event mapper
+        _serializers = eventMappers
+            .ToDictionary(
+                eventMapper => eventMapper.EventType,
+                eventMapper =>
+                {
+                    var serializeMethod = eventMapper.GetType().GetMethod("Serialize");
+                    var serializeDelegate = (Func<IEvent, ISerializedEvent>)(@event => (ISerializedEvent)serializeMethod!.Invoke(eventMapper, [@event])!);
+                    return serializeDelegate;
+                });
+        _deserializers = eventMappers
+            .SelectMany(em => em.Schemas.Select(t => new { Schema = t, Mapper = em }))
+            .ToDictionary(
+                schemaAndMapper => schemaAndMapper.Schema,
+                schemaAndMapper =>
+                {
+                    var deserializeMethod = schemaAndMapper.Mapper.GetType().GetMethod("Deserialize")!;
+                    var deserializeDelegate = (Func<string, string, IEvent>)((type, data) => (IEvent)deserializeMethod!.Invoke(schemaAndMapper.Mapper, [type, data])!);
+                    return deserializeDelegate;
+                });
+    }
+
+    public Result<ISerializedEvent> Serialize(IEvent @event)
+    {
+        if (!_serializers.TryGetValue(@event.GetType(), out var serializer))
+            return Result.Fail($"No serializer found for type {@event.GetType().Name}");
+
+        return Result.Try(() => serializer(@event));
+    }
+
+    public Result<IEvent> Deserialize(string schema, string data)
+    {
+        if (!_deserializers.TryGetValue(schema, out var deserializer))
+            return Result.Fail($"No deserializer found for type {schema}");
+
+        return Result.Try(() => deserializer(schema, data));
+    }
+}
+```
+
+I think event the second implementation is an improvement over the old one. It is more readable and the reflection is targeted to the `TAggregate` type. The source generation is still faster, but the reflection-based implementation is not that bad anymore.
