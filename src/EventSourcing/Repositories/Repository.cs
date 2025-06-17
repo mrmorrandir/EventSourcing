@@ -31,12 +31,12 @@ namespace EventSourcing.Repositories;
 public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate : IAggregate
 {
     private readonly IEventStore _eventStore;
-    private readonly IStateStore _stateStore;
+    private readonly IStateStore? _stateStore;
     private readonly ISerializationRegistry<TAggregate> _serializationRegistry;
     private readonly IAggregator<TAggregate> _aggregator;
     private readonly IEnumerable<IProjector<TAggregate>> _projectors;
 
-    public Repository(IEventStore eventStore, IStateStore stateStore, ISerializationRegistry<TAggregate> serializationRegistry, IAggregator<TAggregate> aggregator, IEnumerable<IProjector<TAggregate>> projectors)
+    public Repository(IEventStore eventStore, ISerializationRegistry<TAggregate> serializationRegistry, IAggregator<TAggregate> aggregator, IEnumerable<IProjector<TAggregate>> projectors, IStateStore? stateStore = null)
     {
         _eventStore = eventStore;
         _stateStore = stateStore;
@@ -169,19 +169,23 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
                     return new Error($"Failed to project event of type {evt.GetType().Name}").CausedBy(projectionResult.Errors);
             }
         }
-        
-        // Serialize the updated aggregate state
-        var serializeResult = _serializationRegistry.Serialize(updatedAggregate);
-        if (serializeResult.IsFailed)
-            return new Error($"Failed to serialize aggregate of type {typeof(TAggregate).Name}").CausedBy(serializeResult.Errors);
-        
-        var serializedState = serializeResult.Value;
-        // Save the aggregate state
-        var stateEntity = new StateEntity(aggregateId, serializedState.Schema, serializedState.Data);
-        var saveStateResult = await _stateStore.SaveStateAsync(stateEntity, cancellationToken);
-        if (saveStateResult.IsFailed)
-            return new Error("Failed to save aggregate state").CausedBy(saveStateResult.Errors);
-        
+
+        // If a state store is configured, save the updated aggregate state
+        if (_stateStore is not null)
+        {
+            // Serialize the updated aggregate state
+            var serializeResult = _serializationRegistry.Serialize(updatedAggregate);
+            if (serializeResult.IsFailed)
+                return new Error($"Failed to serialize aggregate of type {typeof(TAggregate).Name}").CausedBy(serializeResult.Errors);
+
+            var serializedState = serializeResult.Value;
+            // Save the aggregate state
+            var stateEntity = new StateEntity(aggregateId, serializedState.Schema, serializedState.Data);
+            var saveStateResult = await _stateStore.SaveStateAsync(stateEntity, cancellationToken);
+            if (saveStateResult.IsFailed)
+                return new Error("Failed to save aggregate state").CausedBy(saveStateResult.Errors);
+        }
+
         // Save the event stream
         var saveResult = await eventStream.SaveAsync(cancellationToken);
         if (saveResult.IsFailed)
@@ -239,17 +243,21 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
                 return new Error($"Failed to project event of type {createdEvent.GetType().Name}").CausedBy(projectionResult.Errors);
         }
         
-        // Serialize the updated aggregate state
-        var serializeStateResult = _serializationRegistry.Serialize(createAggregateResult.Value);
-        if (serializeStateResult.IsFailed)
-            return new Error($"Failed to serialize aggregate of type {typeof(TAggregate).Name}").CausedBy(serializeStateResult.Errors);
-        
-        var serializedState = serializeResult.Value;
-        // Save the aggregate state
-        var stateEntity = new StateEntity(createAggregateResult.Value.Id, serializedState.Schema, serializedState.Data);
-        var saveStateResult = await _stateStore.SaveStateAsync(stateEntity, cancellationToken);
-        if (saveStateResult.IsFailed)
-            return new Error("Failed to save aggregate state").CausedBy(saveStateResult.Errors);
+        // If a state store is configured, save the updated aggregate state
+        if (_stateStore is not null)
+        {
+            // Serialize the updated aggregate state
+            var serializeStateResult = _serializationRegistry.Serialize(createAggregateResult.Value);
+            if (serializeStateResult.IsFailed)
+                return new Error($"Failed to serialize aggregate of type {typeof(TAggregate).Name}").CausedBy(serializeStateResult.Errors);
+
+            var serializedState = serializeResult.Value;
+            // Save the aggregate state
+            var stateEntity = new StateEntity(createAggregateResult.Value.Id, serializedState.Schema, serializedState.Data);
+            var saveStateResult = await _stateStore.SaveStateAsync(stateEntity, cancellationToken);
+            if (saveStateResult.IsFailed)
+                return new Error("Failed to save aggregate state").CausedBy(saveStateResult.Errors);
+        }
 
         // Save the event stream
         var saveResult = await eventStream.SaveAsync(cancellationToken);

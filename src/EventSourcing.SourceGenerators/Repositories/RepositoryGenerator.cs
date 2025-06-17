@@ -79,6 +79,12 @@ public class RepositoryGenerator : IIncrementalGenerator
         var aggregateType = repoInterface.TypeArguments.FirstOrDefault() as INamedTypeSymbol;
         if (aggregateType == null)
             return null;
+        
+        // Check if the Repository has a [UseStateRepository] attribute
+        bool createStateRepository = false;
+        var useStateRepositoryAttribute = classSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == "EventSourcing.Repositories.UseStateRepositoryAttribute");
+        if (useStateRepositoryAttribute != null)
+            createStateRepository = useStateRepositoryAttribute.ConstructorArguments.Length > 0 && useStateRepositoryAttribute.ConstructorArguments[0].Value is true;
 
         return new RepositoryInfo
         {
@@ -91,6 +97,7 @@ public class RepositoryGenerator : IIncrementalGenerator
             StateRepositoryName = $"{aggregateType.Name}StateRepository",
             StateRepositoryNamespace = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}",
             StateRepositoryFullName = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}.{aggregateType.Name}StateRepository",
+            CreateStateRepository = createStateRepository
         };
     }
 
@@ -112,7 +119,7 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, IStateStore stateStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, stateStore, serializationRegistry, aggregator, projectors) {{ }}");
+        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors{(info.CreateStateRepository ? ", IStateStore stateStore" : "")}) : base(eventStore, serializationRegistry, aggregator, projectors{(info.CreateStateRepository ? ", stateStore":"")}) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -183,11 +190,11 @@ public class RepositoryGenerator : IIncrementalGenerator
 
         foreach (var info in aggregateInfos)
             sb.AppendLine($"        services.Add{info.RepositoryName}();");
-        foreach (var info in aggregateInfos)
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
             sb.AppendLine($"        services.Add{info.StateRepositoryName}();");
 
         sb.AppendLine("    }");
-        
+
         foreach (var info in aggregateInfos)
         {
             sb.AppendLine("    /// <summary>");
@@ -201,6 +208,9 @@ public class RepositoryGenerator : IIncrementalGenerator
             sb.AppendLine($"        services.AddScoped<IRepository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
             sb.AppendLine("    }");
             sb.AppendLine();
+        }
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+        {
             sb.AppendLine("    /// <summary>");
             sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.StateRepositoryName}\"/> in the service collection.</para>");
             sb.AppendLine("    /// <para>To register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
@@ -229,5 +239,6 @@ public class RepositoryGenerator : IIncrementalGenerator
         public string StateRepositoryName = "";
         public string StateRepositoryNamespace = "";
         public string StateRepositoryFullName = "";
+        public bool CreateStateRepository = false;
     }
 }
