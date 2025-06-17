@@ -248,17 +248,27 @@ public partial class SerializationGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"    public Result<ISerializedEvent> Serialize(IEvent @event)");
         sb.AppendLine("    {");
-        sb.AppendLine("        return @event.GetType() switch");
+        sb.AppendLine("        return @event switch");
         sb.AppendLine("        {");
         
         // Create serialization cases for each event type
         foreach (var mapperInfo in mapperInfos)
-            sb.AppendLine($"            {{ }} type when type == typeof({mapperInfo.EventName}) => Result.Try(() => {mapperInfo.MapperFieldName}.Serialize(({mapperInfo.EventName})@event)),");
+            sb.AppendLine($"            {mapperInfo.EventName} {char.ToLower(mapperInfo.EventName[0]) + mapperInfo.EventName.Substring(1)} when @event.GetType() == typeof({mapperInfo.EventName}) => Serialize({char.ToLower(mapperInfo.EventName[0]) + mapperInfo.EventName.Substring(1)}),");
         
         sb.AppendLine("            _ => Result.Fail($\"No serializer found for type {@event.GetType().Name}\")");
         sb.AppendLine("        };");
         sb.AppendLine("    }");
         sb.AppendLine();
+        
+        foreach (var mapperInfo in mapperInfos)
+        {
+            sb.AppendLine($"    public Result<ISerializedEvent> Serialize({mapperInfo.EventName} @event)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        return Result.Try(() => {mapperInfo.MapperFieldName}.Serialize(@event));");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+
         sb.AppendLine("    public Result<IEvent> Deserialize(string schema, string data)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (!_deserializers.TryGetValue(schema, out var deserializer))");

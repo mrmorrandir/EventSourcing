@@ -232,23 +232,43 @@ public class AggregatorGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         
         foreach (var eventInfo in eventInfos.Where(x => x.IsCreateEvent))
-            sb.AppendLine($"            {eventInfo.EventName} e => Result.Try(() => {info.AggregateName}.Create(e)),");
+            sb.AppendLine($"            {eventInfo.EventName} {char.ToLower(eventInfo.EventName[0]) + eventInfo.EventName.Substring(1)} when @event.GetType() == typeof({eventInfo.EventName}) => CreateFromEvent({char.ToLower(eventInfo.EventName[0]) + eventInfo.EventName.Substring(1)}),");
         
         sb.AppendLine("            _ => Result.Fail($\"Unknown event type: {@event.GetType().Name}\")");
         sb.AppendLine("        };");
         sb.AppendLine("    }");
         sb.AppendLine();
+        
+        foreach (var eventInfo in eventInfos.Where(x => x.IsCreateEvent))
+        {
+            sb.AppendLine($"    public Result<{info.AggregateName}> CreateFromEvent({eventInfo.EventName} @event)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        return Result.Try(() => {info.AggregateName}.Create(@event));");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        
         sb.AppendLine($"    public Result<{info.AggregateName}> ApplyEvent({info.AggregateName} aggregate, IEvent @event)");
         sb.AppendLine("    {");
         sb.AppendLine("        return @event switch");
         sb.AppendLine("        {");
         
         foreach (var eventInfo in eventInfos.Where(x => !x.IsCreateEvent))
-            sb.AppendLine($"            {eventInfo.EventName} e => Result.Try(() => aggregate.Apply(e)),");
+            sb.AppendLine($"            {eventInfo.EventName} {char.ToLower(eventInfo.EventName[0]) + eventInfo.EventName.Substring(1)} when @event.GetType() == typeof({eventInfo.EventName}) => ApplyEvent(aggregate, {char.ToLower(eventInfo.EventName[0]) + eventInfo.EventName.Substring(1)}),");
         
         sb.AppendLine("            _ => Result.Fail($\"Unknown event type: {@event.GetType().Name}\")");
         sb.AppendLine("        };");
         sb.AppendLine("    }");
+        
+        foreach (var eventInfo in eventInfos.Where(x => !x.IsCreateEvent))
+        {
+            sb.AppendLine($"    public Result<{info.AggregateName}> ApplyEvent({info.AggregateName} aggregate, {eventInfo.EventName} @event)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        return Result.Try(() => aggregate.Apply(@event));");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        
         sb.AppendLine("}");
 
         return sb.ToString();

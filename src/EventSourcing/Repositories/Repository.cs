@@ -57,7 +57,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     /// <param name="create">A function that returns an event for the creation of an aggregate (passed to the corresponding `Create` method of the aggregate).</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A result containing the created aggregate instance on success, or error details on failure.</returns>
-    public async Task<Result<TAggregate>> CreateAsync(Func<Task<IEvent>> create, CancellationToken cancellationToken = default)
+    public async Task<Result<TAggregate>> CreateAsync<TEvent>(Func<Task<TEvent>> create, CancellationToken cancellationToken = default) where TEvent : IEvent
     {
         var createResult = await Result.Try(create);
         if (createResult.IsFailed)
@@ -66,8 +66,8 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         return await CreateAsync(createResult.Value, cancellationToken);
     }
     
-    /// <inheritdoc cref="CreateAsync(Func{Task{IEvent}}, CancellationToken)"/>
-    public async Task<Result<TAggregate>> CreateAsync(Func<IEvent> create, CancellationToken cancellationToken)
+    /// <inheritdoc cref="CreateAsync{TEvent}(Func{Task{TEvent}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> CreateAsync<TEvent>(Func<TEvent> create, CancellationToken cancellationToken = default) where TEvent : IEvent
     {
         return await CreateAsync(() => Task.FromResult(create()), cancellationToken);
     }
@@ -195,8 +195,20 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     {
         return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
     }
+
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, Task<TEvent>> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateAsync(aggregateId, async aggregate => [await update(aggregate)], cancellationToken);
+    }
     
-    private async Task<Result<TAggregate>> CreateAsync(IEvent createdEvent, CancellationToken cancellationToken = default)
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, TEvent> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateAsync(aggregateId, aggregate => Task.FromResult<List<IEvent>>([update(aggregate)]), cancellationToken);
+    }
+    
+    private async Task<Result<TAggregate>> CreateAsync<TEvent>(TEvent createdEvent, CancellationToken cancellationToken = default) where TEvent : IEvent
     {
         var eventStreamResult = await _eventStore.CreateStreamAsync(createdEvent.AggregateId, cancellationToken);
         if (eventStreamResult.IsFailed)

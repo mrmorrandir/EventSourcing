@@ -36,15 +36,23 @@ public class MyTestAggregateSerializationRegistry : ISerializationRegistry<MyTes
 
     public Result<ISerializedEvent> Serialize(IEvent @event)
     {
-        return @event.GetType() switch
+        return @event switch
         {
-            { } type when type == typeof(CreatedEvent) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper.Serialize((CreatedEvent)@event)),
-            { } type when type == typeof(ChangedNameEvent) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsChangedNameEventMapper.Serialize((ChangedNameEvent)@event)),
-            { } type when type == typeof(ChangedDescriptionEvent) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsChangedDescriptionEventMapper.Serialize((ChangedDescriptionEvent)@event)),
-            { } type when type == typeof(DeletedEvent) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper.Serialize((DeletedEvent)@event)),
-            _ => Result.Fail($"No serializer found for type {@event.GetType().Name}")
+            CreatedEvent createdEvent when @event.GetType() == typeof(CreatedEvent) => Serialize(createdEvent),
+            ChangedNameEvent changedNameEvent when @event.GetType() == typeof(ChangedNameEvent) => Serialize(changedNameEvent),
+            ChangedDescriptionEvent changedDescriptionEvent when @event.GetType() == typeof(ChangedDescriptionEvent) => Serialize(changedDescriptionEvent),
+            DeletedEvent deletedEvent when @event.GetType() == typeof(DeletedEvent) => Serialize(deletedEvent),
+            _ => new Error($"No serializer found for event type {@event.GetType().Name}")
         };
     }
+    
+    public Result<ISerializedEvent> Serialize(CreatedEvent @event) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper.Serialize(@event));
+    
+    public Result<ISerializedEvent> Serialize(ChangedNameEvent @event) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsChangedNameEventMapper.Serialize(@event));
+    
+    public Result<ISerializedEvent> Serialize(ChangedDescriptionEvent @event) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsChangedDescriptionEventMapper.Serialize(@event));
+    
+    public Result<ISerializedEvent> Serialize(DeletedEvent @event) => Result.Try(() => _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper.Serialize(@event));
 
     public Result<IEvent> Deserialize(string schema, string data)
     {
