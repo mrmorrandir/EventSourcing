@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace EventSourcing.Mappers;
 
-public static class EventSerializerOptions
+public static class EventSourcingSerializerOptions
 {
     public static JsonSerializerOptions Default { get; } = new()
     {

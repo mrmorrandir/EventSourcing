@@ -12,7 +12,7 @@ public class EventDeserializerTests
         var deserializer = new EventDeserializer<MagicEvent>();
         var magicEvent = new MagicEvent(Guid.NewGuid(), "Magic", DateTime.UtcNow);
 
-        var deserialized = deserializer.Deserialize("{\"aggregateId\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
+        var deserialized = deserializer.Deserialize("{\"aggregateId\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSourcingSerializerOptions.Default) + "}");
 
         deserialized.AggregateId.Should().Be(magicEvent.AggregateId);
         deserialized.Magic.Should().Be(magicEvent.Magic);

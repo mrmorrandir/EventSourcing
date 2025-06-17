@@ -106,7 +106,7 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
+        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, IStateStore stateStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, stateStore, serializationRegistry, aggregator, projectors) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }

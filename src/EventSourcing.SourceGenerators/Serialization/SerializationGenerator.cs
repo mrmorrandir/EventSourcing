@@ -223,6 +223,7 @@ public partial class SerializationGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"public class {aggregateInfo.AggregateName}SerializationRegistry : ISerializationRegistry<{aggregateInfo.AggregateName}>");
         sb.AppendLine("{");
+        sb.AppendLine($"    private static readonly StateSerializer<{aggregateInfo.AggregateName}> _stateSerializer = new();");
         
         foreach (var mapperInfo in mapperInfos)
             sb.AppendLine($"    private static readonly {mapperInfo.MapperName} {mapperInfo.MapperFieldName} = new();");
@@ -238,6 +239,11 @@ public partial class SerializationGenerator : IIncrementalGenerator
             sb.AppendLine($"            _deserializers.Add(schema, (typeSchema, data) => {mapperInfo.MapperFieldName}.Deserialize(typeSchema, data));");
         }
         
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    public Result<ISerializedState> Serialize({aggregateInfo.AggregateName} state)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        return Result.Try(() => _stateSerializer.Serialize(state));");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine($"    public Result<ISerializedEvent> Serialize(IEvent @event)");

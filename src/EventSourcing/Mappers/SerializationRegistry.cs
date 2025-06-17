@@ -23,7 +23,7 @@ public class SerializationRegistry<TAggregate> : ISerializationRegistry<TAggrega
 {
     private static readonly Dictionary<string, Func<string, string, IEvent>> _deserializers;
     private static readonly Dictionary<Type, Func<IEvent, ISerializedEvent>> _serializers;
-
+    private static readonly StateSerializer<TAggregate> _stateSerializer;
     static SerializationRegistry()
     {
         // Use reflection to find the event types that are concerned with this aggregate
@@ -69,6 +69,13 @@ public class SerializationRegistry<TAggregate> : ISerializationRegistry<TAggrega
                     var deserializeDelegate = (Func<string, string, IEvent>)((type, data) => (IEvent)deserializeMethod!.Invoke(schemaAndMapper.Mapper, [type, data])!);
                     return deserializeDelegate;
                 });
+        // Create a state serializer for the aggregate type
+        _stateSerializer = new StateSerializer<TAggregate>();
+    }
+    
+    public Result<ISerializedState> Serialize(TAggregate state)
+    {
+        return Result.Try(() => _stateSerializer.Serialize(state));
     }
 
     public Result<ISerializedEvent> Serialize(IEvent @event)

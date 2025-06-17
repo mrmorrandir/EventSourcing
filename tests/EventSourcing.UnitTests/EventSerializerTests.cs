@@ -15,7 +15,7 @@ public class EventSerializerTests
         var serialized = serializer.Serialize(magicEvent);
         
         serialized.Schema.Should().Be("magic-event-v3");
-        serialized.Data.Should().Be("{\"aggregateId\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSerializerOptions.Default) + "}");
+        serialized.Data.Should().Be("{\"aggregateId\":\"" + magicEvent.AggregateId + "\",\"magic\":\"" + magicEvent.Magic + "\",\"created\":" + JsonSerializer.Serialize(magicEvent.Created, EventSourcingSerializerOptions.Default) + "}");
     }
     
     [Fact]
@@ -26,6 +26,6 @@ public class EventSerializerTests
         
         var func = () => serializer.Serialize(invalidEvent);
         
-        func.Should().Throw<EventSerializerException>().WithMessage("*Failed*");
+        func.Should().Throw<EventSourcingSerializerException>().WithMessage("*Failed*");
     }
 }

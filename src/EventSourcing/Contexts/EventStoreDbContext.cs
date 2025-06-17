@@ -34,7 +34,7 @@ public class EventStoreDbContext : DbContext, IEventStoreDbContext
             .HasIndex(e => e.Created);
         
         modelBuilder.Entity<StateEntity>()
-            .HasKey(s => s.StreamId);
+            .HasKey(s => s.Id);
 
         base.OnModelCreating(modelBuilder);
     }

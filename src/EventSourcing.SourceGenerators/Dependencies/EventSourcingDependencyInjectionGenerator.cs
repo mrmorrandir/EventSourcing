@@ -114,6 +114,7 @@ public class EventSourcingDependencyInjectionGenerator : IIncrementalGenerator
         sb.AppendLine("                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)));");
         sb.AppendLine();
         sb.AppendLine("        services.AddScoped<IEventStore, EventStore>();");
+        sb.AppendLine("        services.AddScoped<IStateStore, StateStore>();");
         sb.AppendLine("        services.AddRepositories();");
         sb.AppendLine("        services.AddSerialization();");
         sb.AppendLine("        services.AddAggregators();");

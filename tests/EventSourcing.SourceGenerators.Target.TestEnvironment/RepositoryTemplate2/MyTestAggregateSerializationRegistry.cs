@@ -12,6 +12,7 @@ namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTempla
 /// </summary>
 public class MyTestAggregateSerializationRegistry : ISerializationRegistry<MyTestAggregate>
 {
+    private static readonly StateSerializer<MyTestAggregate> _stateSerializer = new();
     private static readonly CreatedEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsCreatedEventMapper = new();
     private static readonly ChangedNameEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsChangedNameEventMapper = new();
     private static readonly ChangedDescriptionEventMapper _eventSourcingSourceGeneratorsTargetDomainEventsChangedDescriptionEventMapper = new();
@@ -30,7 +31,9 @@ public class MyTestAggregateSerializationRegistry : ISerializationRegistry<MyTes
         foreach (var schema in _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper.Schemas)
             _deserializers.Add(schema, (typeSchema, data) => _eventSourcingSourceGeneratorsTargetDomainEventsDeletedEventMapper.Deserialize(typeSchema, data));
     }
-    
+
+    public Result<ISerializedState> Serialize(MyTestAggregate state) => Result.Try(() => _stateSerializer.Serialize(state));
+
     public Result<ISerializedEvent> Serialize(IEvent @event)
     {
         return @event.GetType() switch

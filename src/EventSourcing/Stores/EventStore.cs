@@ -1,4 +1,5 @@
-﻿using EventSourcing.Contexts;
+﻿using System.Collections.Immutable;
+using EventSourcing.Contexts;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 

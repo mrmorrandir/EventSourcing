@@ -37,7 +37,7 @@ public class RabbitMqStatePublisher<TAggregate> : IPublisher<TAggregate> where T
         await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
         
         await channel.ExchangeDeclareAsync(_options.BaseExchangeName, ExchangeType.Topic, true, false, cancellationToken: cancellationToken);
-        var serializationResult = Result.Try(() => JsonSerializer.Serialize(state, EventSerializerOptions.Default));
+        var serializationResult = Result.Try(() => JsonSerializer.Serialize(state, EventSourcingSerializerOptions.Default));
         if (serializationResult.IsFailed)
             return Result.Fail(serializationResult.Errors);
 
