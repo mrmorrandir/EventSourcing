@@ -5,18 +5,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EventSourcing.SourceGenerators.Aggregators;
 
 [Generator]
-public partial class AggregatorGenerator : IIncrementalGenerator
+public class AggregatorGenerator : IIncrementalGenerator
 {
-    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*-v[0-9]+$")]
-    private static partial Regex TypeRegex();
-
-    [GeneratedRegex(@"-v[0-9]+$")]
-    private static partial Regex VersionSuffixRegex();
+    private static readonly Regex _versionSuffixRegex = new Regex(@"-v[0-9]+$");
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -322,7 +317,7 @@ public partial class AggregatorGenerator : IIncrementalGenerator
     {
         var kebabCaseName = string.Concat(type.Select((x, i) => i > 0 && char.IsUpper(x) ? "-" + x : x.ToString())).ToLower();
         // Check if the kebab case name already has a version number with a regex
-        if (!VersionSuffixRegex().IsMatch(kebabCaseName) && withVersion)
+        if (!_versionSuffixRegex.IsMatch(kebabCaseName) && withVersion)
             kebabCaseName += "-v1"; // default versioning
         return kebabCaseName;
     }

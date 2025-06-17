@@ -11,11 +11,7 @@ namespace EventSourcing.SourceGenerators.Projections;
 [Generator]
 public partial class ProjectionGenerator : IIncrementalGenerator
 {
-    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*-v[0-9]+$")]
-    private static partial Regex TypeRegex();
-
-    [GeneratedRegex(@"-v[0-9]+$")]
-    private static partial Regex VersionSuffixRegex();
+    private static readonly Regex _versionSuffixRegex = new Regex(@"-v[0-9]+$");
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -220,18 +216,20 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"public class {info.AggregateName}Projector : IProjector<{info.AggregateName}>");
         sb.AppendLine("{");
+        
+        var projectionFieldNames = eventInfos.Select(eventInfo => new { Key = eventInfo, FieldName = $"_{char.ToLower(info.AggregateName[0]) + info.AggregateName.Substring(1)}{eventInfo.EventName}Projection"}).ToDictionary(arg => arg.Key, arg => arg.FieldName);
+        var projectionParameterNames = eventInfos.Select(eventInfo => new { Key = eventInfo, FieldName = $"{char.ToLower(info.AggregateName[0]) + info.AggregateName.Substring(1)}{eventInfo.EventName}Projection"}).ToDictionary(arg => arg.Key, arg => arg.FieldName);
+        
         foreach (var eventInfo in eventInfos)
         {
-            var projectionFieldName = $"_{char.ToLower(info.AggregateName[0]) + info.AggregateName[1..]}{eventInfo.EventName}Projection";
-            sb.AppendLine($"    private readonly {info.AggregateName}{eventInfo.EventName}Projection {projectionFieldName};");
+            sb.AppendLine($"    private readonly {info.AggregateName}{eventInfo.EventName}Projection {projectionFieldNames[eventInfo]};");
         }
         
         sb.AppendLine();
         sb.AppendLine($"    public {info.AggregateName}Projector(");
         foreach (var eventInfo in eventInfos)
         {
-            var projectionParameterName = $"{char.ToLower(info.AggregateName[0]) + info.AggregateName[1..]}{eventInfo.EventName}Projection";
-            sb.Append($"        {info.AggregateName}{eventInfo.EventName}Projection {projectionParameterName}");
+            sb.Append($"        {info.AggregateName}{eventInfo.EventName}Projection {projectionParameterNames[eventInfo]}");
             if (eventInfo != eventInfos.Last())
                 sb.AppendLine(",");
             else 
@@ -240,9 +238,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         sb.AppendLine("    {");
         foreach (var eventInfo in eventInfos)
         {
-            var projectionFieldName = $"_{char.ToLower(info.AggregateName[0]) + info.AggregateName[1..]}{eventInfo.EventName}Projection";
-            var projectionParameterName = $"{char.ToLower(info.AggregateName[0]) + info.AggregateName[1..]}{eventInfo.EventName}Projection";
-            sb.AppendLine($"        {projectionFieldName} = {projectionParameterName};");
+            sb.AppendLine($"        {projectionFieldNames[eventInfo]} = {projectionParameterNames[eventInfo]};");
         }
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -252,8 +248,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         foreach (var eventInfo in eventInfos)
         {
-            var projectionFieldName = $"_{char.ToLower(info.AggregateName[0]) + info.AggregateName[1..]}{eventInfo.EventName}Projection";
-            sb.AppendLine($"            {{ }} type when type == typeof({eventInfo.EventName}) => await Result.Try(() => {projectionFieldName}.ProjectAsync(state, ({eventInfo.EventName})@event, cancellationToken)),");
+            sb.AppendLine($"            {{ }} type when type == typeof({eventInfo.EventName}) => await Result.Try(() => {projectionFieldNames[eventInfo]}.ProjectAsync(state, ({eventInfo.EventName})@event, cancellationToken)),");
         }
         sb.AppendLine("            _ => Result.Fail(\"No projection found for event type \" + @event.GetType().Name)");
         sb.AppendLine("        };");
@@ -333,7 +328,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
     {
         var kebabCaseName = string.Concat(type.Select((x, i) => i > 0 && char.IsUpper(x) ? "-" + x : x.ToString())).ToLower();
         // Check if the kebab case name already has a version number with a regex
-        if (!VersionSuffixRegex().IsMatch(kebabCaseName) && withVersion)
+        if (!_versionSuffixRegex.IsMatch(kebabCaseName) && withVersion)
             kebabCaseName += "-v1"; // default versioning
         return kebabCaseName;
     }

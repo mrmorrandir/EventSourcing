@@ -12,11 +12,7 @@ namespace EventSourcing.SourceGenerators.Serialization;
 [Generator]
 public partial class SerializationGenerator : IIncrementalGenerator
 {
-    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*-v[0-9]+$")]
-    private static partial Regex TypeRegex();
-
-    [GeneratedRegex(@"-v[0-9]+$")]
-    private static partial Regex VersionSuffixRegex();
+    private static readonly Regex _versionSuffixRegex = new Regex(@"-v[0-9]+$");
     
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -149,7 +145,10 @@ public partial class SerializationGenerator : IIncrementalGenerator
     
     private static MapperInfo[] CreateMapperInfos(AggregateInfo info)
     {
-        var events = info.CreateMethods.Concat(info.ApplyMethods).DistinctBy(x => x.EventFullName).ToList();
+        var events = info.CreateMethods.Concat(info.ApplyMethods)
+            .GroupBy(x => x.EventFullName)
+            .Select(g => g.First())
+            .ToList();
         if (events.Count == 0)
             return [];
 
@@ -165,7 +164,7 @@ public partial class SerializationGenerator : IIncrementalGenerator
                 MapperName = $"{info.AggregateName}{evt.EventName}Mapper",
                 MapperFullname = $"{info.RepositoryNamespace}.{evt.EventName}Mapper",
                 MapperNamespace = info.RepositoryNamespace,
-                MapperFieldName = $"_{char.ToLower(evt.EventName[0]) + evt.EventName[1..]}Mapper"
+                MapperFieldName = $"_{char.ToLower(evt.EventName[0]) + evt.EventName.Substring(1)}Mapper"
             });
         }
 
@@ -399,7 +398,7 @@ public partial class SerializationGenerator : IIncrementalGenerator
     {
         var kebabCaseName = string.Concat(type.Select((x, i) => i > 0 && char.IsUpper(x) ? "-" + x : x.ToString())).ToLower();
         // Check if the kebab case name already has a version number with a regex
-        if (!VersionSuffixRegex().IsMatch(kebabCaseName) && withVersion)
+        if (!_versionSuffixRegex.IsMatch(kebabCaseName) && withVersion)
             kebabCaseName += "-v1"; // default versioning
         return kebabCaseName;
     }
