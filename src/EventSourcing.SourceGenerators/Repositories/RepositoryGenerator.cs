@@ -24,7 +24,10 @@ public class RepositoryGenerator : IIncrementalGenerator
             foreach (var info in infos)
             {
                 var repositorySource = CreateRepositorySource(info!);
-                spc.AddSource($"{info!.RepositoryNamespace}.{info!.AggregateName}Repository.g.cs", SourceText.From(repositorySource, Encoding.UTF8));
+                spc.AddSource($"{info!.RepositoryFullName}.g.cs", SourceText.From(repositorySource, Encoding.UTF8));
+                
+                var stateRepositorySource = CreateStateRepositorySource(info!);
+                spc.AddSource($"{info!.StateRepositoryFullName}.g.cs", SourceText.From(stateRepositorySource, Encoding.UTF8));
             }
             
             var repositoryDependencyInjectionSource = CreateRepositoryDependencyInjectionSource(infos!);
@@ -85,6 +88,9 @@ public class RepositoryGenerator : IIncrementalGenerator
             RepositoryNamespace = classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
             RepositoryName = classSymbol.Name,
             RepositoryFullName = classSymbol.ToDisplayString(),
+            StateRepositoryName = $"{aggregateType.Name}StateRepository",
+            StateRepositoryNamespace = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}",
+            StateRepositoryFullName = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}.{aggregateType.Name}StateRepository",
         };
     }
 
@@ -107,6 +113,29 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
         sb.AppendLine("{");
         sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, IStateStore stateStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, stateStore, serializationRegistry, aggregator, projectors) {{ }}");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+    
+    private static string CreateStateRepositorySource(RepositoryInfo info)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Linq;");
+        sb.AppendLine("using EventSourcing;");
+        sb.AppendLine("using EventSourcing.Repositories;");
+        sb.AppendLine("using EventSourcing.Stores;");
+        sb.AppendLine("using EventSourcing.Mappers;");
+        sb.AppendLine("using EventSourcing.Projections;");
+        if (!string.IsNullOrEmpty(info.AggregateNamespace))
+            sb.AppendLine($"using {info.AggregateNamespace};");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {info.StateRepositoryNamespace};");
+        sb.AppendLine();
+        sb.AppendLine($"public partial class {info.StateRepositoryName} : StateRepository<{info.AggregateName}>");
+        sb.AppendLine("{");
+        sb.AppendLine($"    public {info.StateRepositoryName}(IStateStore stateStore) : base(stateStore) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -140,6 +169,9 @@ public class RepositoryGenerator : IIncrementalGenerator
             sb.AppendLine($"    /// <item>IRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item>Repository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item><see cref=\"{info.RepositoryName}\"/></item>");
+            sb.AppendLine($"    /// <item>IStateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
+            sb.AppendLine($"    /// <item>StateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
+            sb.AppendLine($"    /// <item><see cref=\"{info.StateRepositoryName}\"/></item>");
         }
 
         sb.AppendLine("    /// </list>");
@@ -151,6 +183,8 @@ public class RepositoryGenerator : IIncrementalGenerator
 
         foreach (var info in aggregateInfos)
             sb.AppendLine($"        services.Add{info.RepositoryName}();");
+        foreach (var info in aggregateInfos)
+            sb.AppendLine($"        services.Add{info.StateRepositoryName}();");
 
         sb.AppendLine("    }");
         
@@ -158,7 +192,7 @@ public class RepositoryGenerator : IIncrementalGenerator
         {
             sb.AppendLine("    /// <summary>");
             sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.RepositoryName}\"/> in the service collection.</para>");
-            sb.AppendLine("    /// <para>In order to register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
+            sb.AppendLine("    /// <para>To register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
             sb.AppendLine("    /// </summary>");
             sb.AppendLine($"    public static void Add{info.RepositoryName}(this IServiceCollection services)");
             sb.AppendLine("    {");
@@ -166,6 +200,18 @@ public class RepositoryGenerator : IIncrementalGenerator
             sb.AppendLine($"        services.AddScoped<Repository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
             sb.AppendLine($"        services.AddScoped<IRepository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
             sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.StateRepositoryName}\"/> in the service collection.</para>");
+            sb.AppendLine("    /// <para>To register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine($"    public static void Add{info.StateRepositoryName}(this IServiceCollection services)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        services.AddScoped<{info.StateRepositoryName}>();");
+            sb.AppendLine($"        services.AddScoped<StateRepository<{info.AggregateName}>, {info.StateRepositoryName}>(sp => sp.GetRequiredService<{info.StateRepositoryName}>());");
+            sb.AppendLine($"        services.AddScoped<IStateRepository<{info.AggregateName}>, {info.StateRepositoryName}>(sp => sp.GetRequiredService<{info.StateRepositoryName}>());");
+            sb.AppendLine("    }");
+            sb.AppendLine();
         }
         sb.AppendLine("}");
         
@@ -180,5 +226,8 @@ public class RepositoryGenerator : IIncrementalGenerator
         public string RepositoryNamespace = "";
         public string RepositoryName = "";
         public string RepositoryFullName = "";
+        public string StateRepositoryName = "";
+        public string StateRepositoryNamespace = "";
+        public string StateRepositoryFullName = "";
     }
 }

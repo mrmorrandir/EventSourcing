@@ -13,7 +13,7 @@ public class StateStore : IStateStore
         _context = context;
     }
 
-    public async Task<Result<List<StateEntity>>> GetStatesAsync(Guid? aggregateId = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<StateEntity>>> GetStatesAsync(Guid? aggregateId = null, string? schema = null, long? offset = null, long? limit = null, CancellationToken cancellationToken = default)
     {
         if (aggregateId == Guid.Empty)
             return new Error("The aggregate Id must not be empty. #MissingAggregateId");
@@ -21,6 +21,12 @@ public class StateStore : IStateStore
         var query = _context.States.AsNoTracking();
         if (aggregateId.HasValue)
             query = query.Where(s => s.Id == aggregateId.Value);
+        if (!string.IsNullOrEmpty(schema))
+            query = query.Where(s => s.Schema == schema);
+        if (offset is > 0)
+            query = query.Skip((int)offset.Value);  
+        if (limit is > 0)
+            query = query.Take((int)limit.Value);
         
         var statesResult = await Result.Try(() => query.ToListAsync(cancellationToken));
         if (statesResult.IsFailed)
