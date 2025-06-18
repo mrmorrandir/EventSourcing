@@ -21,11 +21,14 @@ public class RepositoryGenerator : IIncrementalGenerator
         {
             if (infos.IsDefaultOrEmpty)
                 return;
+
             foreach (var info in infos)
             {
                 var repositorySource = CreateRepositorySource(info!);
                 spc.AddSource($"{info!.RepositoryFullName}.g.cs", SourceText.From(repositorySource, Encoding.UTF8));
-                
+            }
+            foreach (var info in infos.Where(x => x!.CreateStateRepository))
+            {
                 var stateRepositorySource = CreateStateRepositorySource(info!);
                 spc.AddSource($"{info!.StateRepositoryFullName}.g.cs", SourceText.From(stateRepositorySource, Encoding.UTF8));
             }
@@ -119,7 +122,7 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors{(info.CreateStateRepository ? ", IStateStore stateStore" : "")}) : base(eventStore, serializationRegistry, aggregator, projectors{(info.CreateStateRepository ? ", stateStore":"")}) {{ }}");
+        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -171,11 +174,15 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("    /// Repositories that will be registered:");
         
         sb.AppendLine("    /// <list type=\"bullet\">");
+        
         foreach (var info in aggregateInfos)
         {
             sb.AppendLine($"    /// <item>IRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item>Repository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item><see cref=\"{info.RepositoryName}\"/></item>");
+        }
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+        {
             sb.AppendLine($"    /// <item>IStateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item>StateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
             sb.AppendLine($"    /// <item><see cref=\"{info.StateRepositoryName}\"/></item>");

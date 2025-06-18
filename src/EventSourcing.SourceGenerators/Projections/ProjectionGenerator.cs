@@ -44,6 +44,12 @@ public partial class ProjectionGenerator : IIncrementalGenerator
                 
                 allEventInfos.AddRange(eventInfos);
             }
+
+            foreach (var aggregateInfo in infos.Where(x => x!.CreateStateRepository))
+            {
+                var stateProjectorSource = CreateStateProjectorSource(aggregateInfo!);
+                spc.AddSource($"{aggregateInfo!.RepositoryNamespace}.{aggregateInfo!.AggregateName}StateProjector.g.cs", SourceText.From(stateProjectorSource, Encoding.UTF8));
+            }
             
             var dependencyInjectionSource = CreateProjectorsDependencyInjectionSource(infos!, [..allEventInfos]);
             spc.AddSource("ProjectorsDependencyInjection.g.cs", SourceText.From(dependencyInjectionSource, Encoding.UTF8));
@@ -128,7 +134,13 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         if (applyMethods.Count == 0 && createMethods.Count == 0)
             return null;
 
-        return new AggregateInfo
+        // Check if the Repository has a [UseStateRepository] attribute
+        bool createStateRepository = false;
+        var useStateRepositoryAttribute = repositoryType.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == "EventSourcing.Repositories.UseStateRepositoryAttribute");
+        if (useStateRepositoryAttribute != null)
+            createStateRepository = useStateRepositoryAttribute.ConstructorArguments.Length > 0 && useStateRepositoryAttribute.ConstructorArguments[0].Value is true;
+
+        return new AggregateInfo()
         {
             AggregateNamespace = aggregateType.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
             AggregateName = aggregateType.Name,
@@ -137,7 +149,11 @@ public partial class ProjectionGenerator : IIncrementalGenerator
             CreateMethods = createMethods,
             RepositoryNamespace = repositoryType.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
             RepositoryName = repositoryType.Name,
-            RepositoryFullName = repositoryType.ToDisplayString()
+            RepositoryFullName = repositoryType.ToDisplayString(),
+            StateRepositoryName = $"{aggregateType.Name}StateRepository",
+            StateRepositoryNamespace = $"{repositoryType.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}",
+            StateRepositoryFullName = $"{repositoryType.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}.{aggregateType.Name}StateRepository",
+            CreateStateRepository = createStateRepository
         };
     }
     
@@ -258,6 +274,55 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         return sb.ToString();
     }
     
+    private static string CreateStateProjectorSource(AggregateInfo info)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("using EventSourcing;");
+        sb.AppendLine("using EventSourcing.Projections;");
+        sb.AppendLine("using EventSourcing.Stores;");
+        sb.AppendLine("using EventSourcing.Mappers;");
+        sb.AppendLine("using FluentResults;");
+        
+
+        var namespaces = new List<string>();
+        if (!string.IsNullOrWhiteSpace(info.AggregateNamespace))
+            namespaces.Add(info.AggregateNamespace);
+        foreach (var eventNamespace in namespaces.Distinct())
+            sb.AppendLine($"using {eventNamespace};");
+        
+        sb.AppendLine();
+        sb.AppendLine($"namespace {info.RepositoryNamespace};");
+        sb.AppendLine();
+        sb.AppendLine($"public class {info.AggregateName}StateProjector : IProjector<{info.AggregateName}>");
+        sb.AppendLine("{");
+        sb.AppendLine("    private readonly IStateStore _stateStore;");
+        sb.AppendLine("    private readonly ISerializationRegistry<" + info.AggregateName + "> _serializationRegistry;");
+        sb.AppendLine();
+        sb.AppendLine($"    public {info.AggregateName}StateProjector(IStateStore stateStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _stateStore = stateStore;");
+        sb.AppendLine("        _serializationRegistry = serializationRegistry;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    public async Task<Result> ProjectAsync({info.AggregateName} state, IEvent @event, CancellationToken cancellationToken = default)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var serializeResult = _serializationRegistry.Serialize(state);");
+        sb.AppendLine("        if (serializeResult.IsFailed)");
+        sb.AppendLine($"            return new Error(\"Failed to serialize aggregate of type {info.AggregateName}\").CausedBy(serializeResult.Errors);");
+        sb.AppendLine();
+        sb.AppendLine("        var serializedState = serializeResult.Value;");
+        sb.AppendLine("        var stateEntity = new StateEntity(state.Id, serializedState.Schema, serializedState.Data);");
+        sb.AppendLine("        var saveResult = await _stateStore.SaveStateAsync(stateEntity, cancellationToken);");
+        sb.AppendLine("        if (saveResult.IsFailed)");
+        sb.AppendLine("            return new Error(\"Failed to save state\").CausedBy(saveResult.Errors);");
+        sb.AppendLine();
+        sb.AppendLine("        return Result.Ok();");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        return sb.ToString();
+    }
+    
     private static string CreateProjectorsDependencyInjectionSource(ImmutableArray<AggregateInfo> aggregateInfos, ImmutableArray<EventInfo> allEventInfos)
     {
         var sb = new StringBuilder();
@@ -283,8 +348,11 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         sb.AppendLine("    /// Projectors that will be registered:");
         
         sb.AppendLine("    /// <list type=\"bullet\">");
+        
         foreach (var info in aggregateInfos)
             sb.AppendLine($"    /// <item>IProjector&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.AggregateName}Projector\"/>)</item>");
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+            sb.AppendLine($"    /// <item>IProjector&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.AggregateName}StateProjector\"/>)</item>");
         
         sb.AppendLine("    /// </list>");
         sb.AppendLine("    /// </para>");
@@ -294,6 +362,8 @@ public partial class ProjectionGenerator : IIncrementalGenerator
 
         foreach (var info in aggregateInfos)
             sb.AppendLine($"        services.Add{info.AggregateName}Projector();");
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+            sb.AppendLine($"        services.Add{info.AggregateName}StateProjector();");
 
         sb.AppendLine("    }");
         
@@ -315,6 +385,21 @@ public partial class ProjectionGenerator : IIncrementalGenerator
             sb.AppendLine($"        services.AddScoped<IProjector<{info.AggregateName}>, {info.AggregateName}Projector>();");
             sb.AppendLine($"        return services;");
             sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository)) 
+        {
+            sb.AppendLine();    
+            sb.AppendLine($"    /// <summary>");
+            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.AggregateName}StateProjector\"/> in the service collection.</para>");
+            sb.AppendLine($"    /// <para>In order to register all projectors use the <see cref=\"AddProjectors\"/> method.</para>");
+            sb.AppendLine($"    /// </summary>");
+            sb.AppendLine($"    public static IServiceCollection Add{info.AggregateName}StateProjector(this IServiceCollection services)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        services.AddScoped<IProjector<{info.AggregateName}>, {info.AggregateName}StateProjector>();");
+            sb.AppendLine("        return services;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
         }
         
         sb.AppendLine("}");
@@ -343,6 +428,10 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         public string RepositoryNamespace = "";
         public string RepositoryName = "";
         public string RepositoryFullName = "";
+        public string StateRepositoryName = "";
+        public string StateRepositoryNamespace = "";
+        public string StateRepositoryFullName = "";
+        public bool CreateStateRepository = false;
     }
 
     private class MutateMethodInfo
