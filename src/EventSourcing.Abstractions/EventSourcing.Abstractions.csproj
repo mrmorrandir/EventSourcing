@@ -4,9 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
+        
         <Title>EventSourcing.Abstractions</Title>
         <Authors>Andreas Naumann</Authors>
-        <Version>2.0.0-preview-20250618.4</Version>
+        <Version>2.0.0-preview-20250618.5</Version>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
@@ -16,15 +18,14 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReleaseNotes></PackageReleaseNotes>
         <RootNamespace>EventSourcing</RootNamespace>
+    </PropertyGroup>
 
-        <!--SourceLink-->
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PropertyGroup>
+        <!--This is for symbols in the NuGet package-->
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
         <PackageReference Include="FluentResults" Version="3.16.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5"/>
     </ItemGroup>

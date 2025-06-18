@@ -4,7 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>2.0.0-preview-20250618.4</Version>
+        
+        <Version>2.0.0-preview-20250618.5</Version>
         <Title>EventSourcing.Publishers</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>
@@ -15,11 +16,12 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
 
-        <!--SourceLink-->
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PropertyGroup>
+        <!--This is for symbols in the NuGet package-->
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
 
     <ItemGroup>

@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>2.0.0-preview-20250618.4</Version>
+        <Version>2.0.0-preview-20250618.5</Version>
         <Title>EventSourcing.Publishers.RabbitMQ</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with RabbitMQ.
@@ -17,13 +17,15 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-
-        <!--SourceLink-->
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!--This is for symbols in the NuGet package-->
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+    
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
         <PackageReference Include="RabbitMQ.Client" Version="7.1.2"/>

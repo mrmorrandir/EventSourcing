@@ -4,6 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
 
         <!--This is all magic to pack the analyzer as a NuGet package.-->
         <!--Generate package on build-->
@@ -16,7 +17,7 @@
         <IsRoslynAnalyzer>true</IsRoslynAnalyzer>
         <DevelopmentDependency>true</DevelopmentDependency>
         
-        <Version>2.0.0-preview-20250618.4</Version>
+        <Version>2.0.0-preview-20250618.5</Version>
         <Title>EventSourcing.SourceGenerators</Title>
         <Authors>Andreas Naumann</Authors>
         <Copyright>2025 @ Andreas Naumann</Copyright>
@@ -26,30 +27,23 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-
-        <!--SourceLink-->
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <LangVersion>default</LangVersion>
+        
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <NoWarn>1701;1702;NU5128</NoWarn>
+      <NoWarn>1701;1702;NU5128;RS1038</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <NoWarn>1701;1702;NU5128</NoWarn>
+      <NoWarn>1701;1702;NU5128;RS1038</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <!--Package the generator in the analyzer directory of the NuGet package-->
         <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
-    
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -59,5 +53,9 @@
 
     <ItemGroup>
         <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EventSourcing.Analyzers\EventSourcing.Analyzers.csproj" />
     </ItemGroup>
 </Project>

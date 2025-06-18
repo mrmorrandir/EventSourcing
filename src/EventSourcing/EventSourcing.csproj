@@ -4,10 +4,12 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
+        
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>EventSourcing</Title>
         <Authors>Andreas Naumann</Authors>
-        <Version>2.0.0-preview-20250618.4</Version>
+        <Version>2.0.0-preview-20250618.5</Version>
         <Description>A small EventSourcing Framework Package.
 
             The persistance is based on the EntityFramworkCore and can be configured via DependencyInjection
@@ -20,23 +22,23 @@
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
         <PackageReleaseNotes></PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-
-        <!--SourceLink-->
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
+    
+    <PropertyGroup>
+        <!--This is for symbols in the NuGet package-->
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+    
 
     <ItemGroup>
         <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
         <PackageReference Include="FluentResults" Version="3.16.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
             <PrivateAssets>all</PrivateAssets>
