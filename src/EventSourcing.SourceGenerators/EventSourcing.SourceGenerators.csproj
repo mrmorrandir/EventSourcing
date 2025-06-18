@@ -39,6 +39,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\EventSourcing.Analyzers\EventSourcing.Analyzers.csproj" />
         <!--Package the generator in the analyzer directory of the NuGet package-->
         <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
@@ -56,6 +57,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Analyzers\EventSourcing.Analyzers.csproj" />
+      
     </ItemGroup>
 </Project>
