@@ -205,8 +205,9 @@ public partial class SerializationGenerator : IIncrementalGenerator
     private static string CreateSerializationRegistrySource(AggregateInfo aggregateInfo, ImmutableArray<MapperInfo> mapperInfos)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("using FluentResults;");
+        sb.AppendLine("using EventSourcing");
         sb.AppendLine("using EventSourcing.Mappers;");
+        sb.AppendLine("using FluentResults;");
 
         var namespaces = new List<string>();
         if (!string.IsNullOrWhiteSpace(aggregateInfo.RepositoryNamespace))
