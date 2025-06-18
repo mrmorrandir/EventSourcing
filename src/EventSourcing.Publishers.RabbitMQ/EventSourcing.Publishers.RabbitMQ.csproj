@@ -12,7 +12,7 @@
         </Description>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>EventSourcing, Events, EventStore</PackageTags>
@@ -32,6 +32,10 @@
     <ItemGroup>
         <ProjectReference Include="..\EventSourcing.Publishers\EventSourcing.Publishers.csproj"/>
         <ProjectReference Include="..\EventSourcing\EventSourcing.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
     </ItemGroup>
 
 </Project>
