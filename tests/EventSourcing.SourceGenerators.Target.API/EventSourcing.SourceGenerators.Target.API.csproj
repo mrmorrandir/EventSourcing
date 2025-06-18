@@ -13,7 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\EventSourcing.SourceGenerators.Target.Application\EventSourcing.SourceGenerators.Target.Application.csproj" />
-      <ProjectReference Include="..\tests\EventSourcing.SourceGenerators.Target.Infrastructure\EventSourcing.SourceGenerators.Target.Infrastructure.csproj" />
+      <ProjectReference Include="..\EventSourcing.SourceGenerators.Target.Infrastructure\EventSourcing.SourceGenerators.Target.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

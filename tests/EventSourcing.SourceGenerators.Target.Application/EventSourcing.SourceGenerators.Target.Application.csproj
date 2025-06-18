@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\tests\EventSourcing.SourceGenerators.Target.Domain\EventSourcing.SourceGenerators.Target.Domain.csproj" />
+      <ProjectReference Include="..\EventSourcing.SourceGenerators.Target.Domain\EventSourcing.SourceGenerators.Target.Domain.csproj" />
     </ItemGroup>
 
 </Project>
