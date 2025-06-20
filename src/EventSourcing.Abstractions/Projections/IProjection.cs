@@ -1,3 +1,5 @@
+using FluentResults;
+
 namespace EventSourcing.Projections;
 
 /// <summary>
@@ -16,5 +18,5 @@ public interface IProjection<in TAggregate, in TEvent> where TAggregate : IAggre
     /// <param name="event">The event to project.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>A task representing the asynchronous projection operation.</returns>
-    Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
+    Task<Result> ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default);
 }

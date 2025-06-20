@@ -3,8 +3,8 @@ namespace EventSourcing.Publishers.RabbitMQ.IntegrationTests.Aggregates.Reposito
 
 public partial class TestAggregateNameChangedEventProjection
 {
-    public override Task ProjectAsync(TestAggregate state, NameChangedEvent @event, CancellationToken cancellationToken = default)
+    public override Task<Result> ProjectAsync(TestAggregate state, NameChangedEvent @event, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        return Task.FromResult(Result.Ok());
     }
 }

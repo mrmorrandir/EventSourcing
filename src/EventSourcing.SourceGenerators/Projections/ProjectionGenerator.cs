@@ -264,7 +264,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         foreach (var eventInfo in eventInfos)
         {
-            sb.AppendLine($"            {{ }} type when type == typeof({eventInfo.EventName}) => await Result.Try(() => {projectionFieldNames[eventInfo]}.ProjectAsync(state, ({eventInfo.EventName})@event, cancellationToken)),");
+            sb.AppendLine($"            {{ }} type when type == typeof({eventInfo.EventName}) => await {projectionFieldNames[eventInfo]}.ProjectAsync(state, ({eventInfo.EventName})@event, cancellationToken),");
         }
         sb.AppendLine("            _ => Result.Fail(\"No projection found for event type \" + @event.GetType().Name)");
         sb.AppendLine("        };");

@@ -1,7 +1,6 @@
 ﻿using EventSourcing.Projections;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
-using Microsoft.Extensions.Logging;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
 
@@ -17,9 +16,9 @@ public class ChangedDescriptionEventProjection : AbstractProjection<MyTestAggreg
         _logger = logger;
     }
 
-    public override Task ProjectAsync(MyTestAggregate state, ChangedDescriptionEvent @event, CancellationToken cancellationToken = default)
+    public override Task<Result> ProjectAsync(MyTestAggregate state, ChangedDescriptionEvent @event, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Projecting ChangedDescriptionEvent for aggregate {AggregateId}", state.Id);
-        return Task.CompletedTask;
+        return Task.FromResult(Result.Ok());
     }
 }

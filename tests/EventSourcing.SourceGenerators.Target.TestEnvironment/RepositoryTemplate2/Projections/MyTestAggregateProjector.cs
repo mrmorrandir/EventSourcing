@@ -1,7 +1,6 @@
 ﻿using EventSourcing.Projections;
 using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
-using FluentResults;
 
 namespace EventSourcing.SourceGenerators.Target.TestEnvironment.RepositoryTemplate2.Projections;
 
@@ -31,9 +30,9 @@ public class MyTestAggregateProjector : IProjector<MyTestAggregate>
     {
         return @event.GetType() switch
         {
-            {  } type when type == typeof(CreatedEvent) => await Result.Try(() => _createdEventProjection.ProjectAsync(state, (CreatedEvent)@event, cancellationToken)),
-            {  } type when type == typeof(ChangedNameEvent) => await Result.Try(() => _changedNameEventProjection.ProjectAsync(state, (ChangedNameEvent)@event, cancellationToken)),
-            {  } type when type == typeof(ChangedDescriptionEvent) => await Result.Try(() => _changedDescriptionEventProjection.ProjectAsync(state, (ChangedDescriptionEvent)@event, cancellationToken)),
+            {  } type when type == typeof(CreatedEvent) => await _createdEventProjection.ProjectAsync(state, (CreatedEvent)@event, cancellationToken),
+            {  } type when type == typeof(ChangedNameEvent) => await _changedNameEventProjection.ProjectAsync(state, (ChangedNameEvent)@event, cancellationToken),
+            {  } type when type == typeof(ChangedDescriptionEvent) => await _changedDescriptionEventProjection.ProjectAsync(state, (ChangedDescriptionEvent)@event, cancellationToken),
             _ => Result.Fail($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.")
         };
     }

@@ -1,3 +1,5 @@
+using FluentResults;
+
 namespace EventSourcing.Projections;
 
 
@@ -18,12 +20,9 @@ public abstract class AbstractProjection<TAggregate, TEvent> : IProjection<TAggr
     /// <param name="state">The current state of the aggregate, including the applied event.</param>
     /// <param name="event">The event to project.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
-    /// <returns>A task representing the asynchronous projection operation.</returns>
-    /// <exception cref="NotImplementedException">
-    /// Thrown if the projection is not implemented for the given event and aggregate type.
-    /// </exception>
-    public virtual Task ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
+    /// <returns>Returns a result indicating the success or failure of the projection operation.</returns>
+    public virtual Task<Result> ProjectAsync(TAggregate state, TEvent @event, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented.");
+        return Task.FromResult(Result.Fail($"Projection for event '{@event.GetType().Name}' of '{state.GetType().Namespace}' is not implemented."));
     }
 }

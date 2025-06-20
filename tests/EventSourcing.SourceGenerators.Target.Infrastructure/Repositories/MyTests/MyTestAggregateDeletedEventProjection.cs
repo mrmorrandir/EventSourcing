@@ -1,6 +1,5 @@
 ﻿using EventSourcing.SourceGenerators.Target.Domain;
 using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
-using Microsoft.Extensions.Logging;
 
 namespace EventSourcing.SourceGenerators.Target.Infrastructure.Repositories.MyTests;
 
@@ -12,9 +11,9 @@ public partial class MyTestAggregateDeletedEventProjection
     {
         _logger = logger;
     }
-    public override Task ProjectAsync(MyTestAggregate state, DeletedEvent @event, CancellationToken cancellationToken = default)
+    public override Task<Result> ProjectAsync(MyTestAggregate state, DeletedEvent @event, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Projecting DeletedEvent - State: {State}", state);
-        return Task.CompletedTask;
+        return Task.FromResult(Result.Ok());
     }
 }
