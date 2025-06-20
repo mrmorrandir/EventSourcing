@@ -61,7 +61,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         if (createResult.IsFailed)
             return new Error("Failed to create aggregate").CausedBy(createResult.Errors);
 
-        return await CreateAsync(createResult.Value, cancellationToken);
+        return await CreateInternalAsync(createResult.Value, cancellationToken);
     }
     
     /// <inheritdoc cref="CreateAsync{TEvent}(Func{Task{TEvent}}, CancellationToken)"/>
@@ -69,6 +69,22 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     {
         return await CreateAsync(() => Task.FromResult(create()), cancellationToken);
     }
+    /// <inheritdoc cref="CreateAsync{TEvent}(Func{Task{TEvent}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> CreateAsync<TEvent>(Func<Task<Result<TEvent>>> create, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        var createResult = await create();
+        if (createResult.IsFailed)
+            return new Error("Failed to create aggregate").CausedBy(createResult.Errors);
+        
+        return await CreateInternalAsync(createResult.Value, cancellationToken);
+    }
+    
+    /// <inheritdoc cref="CreateAsync{TEvent}(Func{Task{TEvent}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> CreateAsync<TEvent>(Func<Result<TEvent>> create, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await CreateAsync(() => Task.FromResult(create()), cancellationToken);
+    }
+    
 
     /// <summary>
     /// <para>
@@ -109,6 +125,107 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
     /// </example>
     public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Task<List<IEvent>>> update, CancellationToken cancellationToken = default)
     {
+        return await UpdateInternalAsync(aggregateId, UpdateMethod , cancellationToken);
+
+        Task<Result<List<IEvent>>> UpdateMethod(TAggregate aggregate) => Result.Try(() => update(aggregate));
+    }
+  
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, List<IEvent>> update, CancellationToken cancellationToken = default)
+    {
+        return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
+    }
+
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, Task<TEvent>> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateAsync(aggregateId, async aggregate => [await update(aggregate)], cancellationToken);
+    }
+    
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, TEvent> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateAsync(aggregateId, aggregate => Task.FromResult<List<IEvent>>([update(aggregate)]), cancellationToken);
+    }
+    
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Task<Result<List<IEvent>>>> update, CancellationToken cancellationToken = default)
+    {
+        return await UpdateInternalAsync(aggregateId, update , cancellationToken);
+    }
+  
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, Result<List<IEvent>>> update, CancellationToken cancellationToken = default)
+    {
+        return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
+    }
+
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, Task<Result<TEvent>>> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateInternalAsync(aggregateId, async aggregate =>
+        {
+            var result = await update(aggregate);
+            if (result.IsFailed)
+                return Result.Fail(result.Errors);
+            return Result.Ok(new List<IEvent> { result.Value });
+        }, cancellationToken);
+        
+    }
+    
+    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
+    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, Result<TEvent>> update, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        return await UpdateInternalAsync(aggregateId, aggregate =>
+        {
+            var result = update(aggregate);
+            if (result.IsFailed)
+                return Task.FromResult<Result<List<IEvent>>>(Result.Fail(result.Errors));
+            return Task.FromResult(Result.Ok(new List<IEvent> { result.Value }));
+        }, cancellationToken);
+    }
+    
+    private async Task<Result<TAggregate>> CreateInternalAsync<TEvent>(TEvent createdEvent, CancellationToken cancellationToken = default) where TEvent : IEvent
+    {
+        var eventStreamResult = await _eventStore.CreateStreamAsync(createdEvent.AggregateId, cancellationToken);
+        if (eventStreamResult.IsFailed)
+            return new Error("Failed to create event stream").CausedBy(eventStreamResult.Errors);
+        
+        var eventStream = eventStreamResult.Value;
+        
+        var serializeResult = _serializationRegistry.Serialize(createdEvent);
+        if (serializeResult.IsFailed)
+            return new Error($"Failed to serialize event of type {createdEvent.GetType().Name}").CausedBy(serializeResult.Errors);
+        
+        var serializedEvent = serializeResult.Value;
+        var eventEntity = new EventEntity(createdEvent.AggregateId, 1, serializedEvent.Schema, serializedEvent.Data);
+        
+        var appendResult = await eventStream.AppendAsync(eventEntity, cancellationToken);
+        if (appendResult.IsFailed)
+            return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
+        
+        var createAggregateResult = CreateAggregateFromEvents([createdEvent]);
+        if (createAggregateResult.IsFailed)
+            return new Error("Failed to create aggregate from events").CausedBy(createAggregateResult.Errors);
+        
+        // Project the new events
+        foreach (var projector in _projectors)
+        {
+            var projectionResult = await projector.ProjectAsync(createAggregateResult.Value, createdEvent, cancellationToken);
+            if (projectionResult.IsFailed)
+                return new Error($"Failed to project event of type {createdEvent.GetType().Name}").CausedBy(projectionResult.Errors);
+        }
+
+        // Save the event stream
+        var saveResult = await eventStream.SaveAsync(cancellationToken);
+        if (saveResult.IsFailed)
+            return new Error("Failed to save event stream").CausedBy(saveResult.Errors);
+        
+        return createAggregateResult.Value;
+    }
+    
+      private async Task<Result<TAggregate>> UpdateInternalAsync(Guid aggregateId, Func<TAggregate, Task<Result<List<IEvent>>>> update, CancellationToken cancellationToken)
+    {
         // Get the event stream for the aggregate
         var getResult = await _eventStore.GetStreamAsync(aggregateId, cancellationToken);
         if (getResult.IsFailed)
@@ -128,7 +245,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
         var originalAggregate = originalAggregateResult.Value;
         
         // Execute the update function to get the new events
-        var updateFunctionResult = await Result.Try(() => update(originalAggregate));
+        var updateFunctionResult = await update(originalAggregate);
         if (updateFunctionResult.IsFailed)
             return new Error("Failed to update aggregate").CausedBy(updateFunctionResult.Errors);
 
@@ -175,63 +292,7 @@ public class Repository<TAggregate> : IRepository<TAggregate> where TAggregate :
 
         return Result.Ok(updatedAggregate);
     }
-    
-    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
-    public async Task<Result<TAggregate>> UpdateAsync(Guid aggregateId, Func<TAggregate, List<IEvent>> update, CancellationToken cancellationToken = default)
-    {
-        return await UpdateAsync(aggregateId, aggregate => Task.FromResult(update(aggregate)), cancellationToken);
-    }
 
-    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
-    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, Task<TEvent>> update, CancellationToken cancellationToken = default) where TEvent : IEvent
-    {
-        return await UpdateAsync(aggregateId, async aggregate => [await update(aggregate)], cancellationToken);
-    }
-    
-    /// <inheritdoc cref="UpdateAsync(Guid, Func{TAggregate, Task{List{IEvent}}}, CancellationToken)"/>
-    public async Task<Result<TAggregate>> UpdateAsync<TEvent>(Guid aggregateId, Func<TAggregate, TEvent> update, CancellationToken cancellationToken = default) where TEvent : IEvent
-    {
-        return await UpdateAsync(aggregateId, aggregate => Task.FromResult<List<IEvent>>([update(aggregate)]), cancellationToken);
-    }
-    
-    private async Task<Result<TAggregate>> CreateAsync<TEvent>(TEvent createdEvent, CancellationToken cancellationToken = default) where TEvent : IEvent
-    {
-        var eventStreamResult = await _eventStore.CreateStreamAsync(createdEvent.AggregateId, cancellationToken);
-        if (eventStreamResult.IsFailed)
-            return new Error("Failed to create event stream").CausedBy(eventStreamResult.Errors);
-        
-        var eventStream = eventStreamResult.Value;
-        
-        var serializeResult = _serializationRegistry.Serialize(createdEvent);
-        if (serializeResult.IsFailed)
-            return new Error($"Failed to serialize event of type {createdEvent.GetType().Name}").CausedBy(serializeResult.Errors);
-        
-        var serializedEvent = serializeResult.Value;
-        var eventEntity = new EventEntity(createdEvent.AggregateId, 1, serializedEvent.Schema, serializedEvent.Data);
-        
-        var appendResult = await eventStream.AppendAsync(eventEntity, cancellationToken);
-        if (appendResult.IsFailed)
-            return new Error("Failed to append event to stream").CausedBy(appendResult.Errors);
-        
-        var createAggregateResult = CreateAggregateFromEvents([createdEvent]);
-        if (createAggregateResult.IsFailed)
-            return new Error("Failed to create aggregate from events").CausedBy(createAggregateResult.Errors);
-        
-        // Project the new events
-        foreach (var projector in _projectors)
-        {
-            var projectionResult = await projector.ProjectAsync(createAggregateResult.Value, createdEvent, cancellationToken);
-            if (projectionResult.IsFailed)
-                return new Error($"Failed to project event of type {createdEvent.GetType().Name}").CausedBy(projectionResult.Errors);
-        }
-
-        // Save the event stream
-        var saveResult = await eventStream.SaveAsync(cancellationToken);
-        if (saveResult.IsFailed)
-            return new Error("Failed to save event stream").CausedBy(saveResult.Errors);
-        
-        return createAggregateResult.Value;
-    }
 
     private Result<List<IEvent>> CreateEventsFromEntities(IEnumerable<EventEntity> eventEntities)
     {
