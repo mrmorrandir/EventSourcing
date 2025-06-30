@@ -16,25 +16,29 @@ public enum ProcessResult
     Failure
 }
 
-public record Process(Guid Id, string Name, string Description, ProcessState State, ProcessResult Result) : IAggregate
+public record Process<T>(Guid Id, string Name, string Description, T Data, ProcessState State, ProcessResult Result) : IAggregate
 {
-    public static Process Create(CreatedEvent evt)
+    public static Process<T> Create(CreatedEvent<T> evt)
     {
-        return new Process(Guid.NewGuid(), evt.Name, evt.Description, ProcessState.Pending, ProcessResult.Unknown);
+        return new Process<T>(Guid.NewGuid(), evt.Name, evt.Description, evt.Data, ProcessState.Pending, ProcessResult.Unknown);
     }
     
-    public Process Apply(StartedEvent evt)
+    public Process<T> Apply(StartedEvent evt)
     {
         return this with { State = ProcessState.Running, Result = ProcessResult.Unknown };
     }
     
-    public Process Apply(CompletedEvent evt)
+    public Process<T> Apply(CompletedEvent evt)
     {
         return this with { State = ProcessState.Completed, Result = evt.Result };
     }
     
-    public Process Apply(CancelledEvent evt)
+    public Process<T> Apply(CancelledEvent evt)
     {
         return this with { State = ProcessState.Cancelled, Result = ProcessResult.Unknown };
     }
 }
+
+public record LubricantData(string Type, double Amount, double Destination);
+
+public record LubricantProcess(Guid Id, string Name, string Description, LubricantData Data, ProcessState State, ProcessResult Result) :Process<LubricantData>(Id, Name, Description, Data, State, Result);

@@ -168,7 +168,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
                 EventFullName = createMethod.EventFullName,
                 EventNamespace = createMethod.EventNamespace,
                 EventKebabCaseName = ToKebabCase(createMethod.EventName),
-                AggregateFullName = createMethod.AggregateFullName,
+                AggregateFullName = info.AggregateFullName,
                 IsCreateEvent = true
             });
         }
@@ -180,7 +180,7 @@ public partial class ProjectionGenerator : IIncrementalGenerator
                 EventFullName = applyMethod.EventFullName,
                 EventNamespace = applyMethod.EventNamespace,
                 EventKebabCaseName = ToKebabCase(applyMethod.EventName, false),
-                AggregateFullName = applyMethod.AggregateFullName,
+                AggregateFullName = info.AggregateFullName,
                 IsCreateEvent = false
             });
         }
