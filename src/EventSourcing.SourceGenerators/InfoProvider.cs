@@ -16,6 +16,10 @@ public static class InfoProvider
         public Repository Repository { get; set; } = new();
         public StateRepository StateRepository { get; set; } = new();
         public List<EventMapper> EventMappers { get; set; } = [];
+        public Projector Projector { get; set; } = new();
+        public StateProjector StateProjector { get; set; } = new();
+        
+        public List<Projection> Projections { get; set; } = [];
         
         public override string ToString() => $"Aggregate: {Aggregate}\n" +
                                              $"Repository: {Repository}\n" +
@@ -28,10 +32,14 @@ public static class InfoProvider
         public string Namespace { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
         public List<Method> ApplyMethods { get; set; } = [];
         public List<Method> CreateMethods { get; set; } = [];
         public List<Event> ApplyEvents { get; set; } = [];
         public List<Event> CreateEvents { get; set; } = [];
+        
+        public List<Event> Events { get; set; } = [];
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
                                              $"Name: {Name}\n" +
@@ -47,6 +55,10 @@ public static class InfoProvider
         public string Namespace { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNamespaceForFiles => $"{Namespace.Replace("global::", "")}";
+        public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
                                              $"Name: {Name}\n" +
@@ -58,6 +70,10 @@ public static class InfoProvider
         public string Namespace { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNamespaceForFiles => $"{Namespace.Replace("global::", "")}";
+        public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
         public bool Create { get; set; }
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
@@ -94,8 +110,10 @@ public static class InfoProvider
         public string Name { get; set; } = string.Empty;
         public string Fullname { get; set; } = string.Empty;
         public string Namespace { get; set; } = string.Empty;
-        public string VariableName { get; set; } = string.Empty;
-        public string FieldName { get; set; } = string.Empty;
+        public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
+        public string FieldName => $"_{VariableName}";
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
                                              $"Name: {Name}\n" +
@@ -110,8 +128,11 @@ public static class InfoProvider
         public string FullName { get; set; } = string.Empty;
         public string Namespace { get; set; } = string.Empty;
         public string SchemaName { get; set; } = string.Empty;
-        public string VariableName { get; set; } = string.Empty;
-        public string FieldName { get; set; } = string.Empty;
+        public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
+        public string FieldName => $"_{VariableName}";
+        
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
                                              $"Name: {Name}\n" +
@@ -119,6 +140,60 @@ public static class InfoProvider
                                              $"SchemaName: {SchemaName}\n" +
                                              $"VariableName: {VariableName}\n" +
                                              $"FieldName: {FieldName}\n";
+    }
+    
+    public class Projector
+    {
+        public string Namespace { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNamespaceForFiles => $"{Namespace.Replace("global::", "")}";
+        public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
+        public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
+        public string FieldName => $"_{VariableName}";
+
+        public override string ToString() => $"Namespace: {Namespace}\n" +
+                                             $"Name: {Name}\n" +
+                                             $"FullName: {FullName}\n";
+    }
+    
+    public class StateProjector
+    {
+        public string Namespace { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNamespaceForFiles => $"{Namespace.Replace("global::", "")}";
+        public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
+        public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
+        public string FieldName => $"_{VariableName}";
+        
+        public bool Create { get; set; }
+
+        public override string ToString() => $"Namespace: {Namespace}\n" +
+                                             $"Name: {Name}\n" +
+                                             $"FullName: {FullName}\n";
+    }
+
+    public class Projection
+    {
+        public string Namespace { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string SaveNameForFiles => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNameForCode => $"{Name.Replace("<", "Of").Replace(">", "")}";
+        public string SaveNamespaceForFiles => $"{Namespace.Replace("global::", "")}";
+        public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
+        public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
+        public string FieldName => $"_{VariableName}";
+        public Event Event { get; set; }
+
+        public override string ToString() => $"Namespace: {Namespace}\n" +
+                                             $"Name: {Name}\n" +
+                                             $"FullName: {FullName}\n";
     }
 
     public static bool IsRepositoryCandidate(SyntaxNode node)
@@ -249,16 +324,11 @@ public static class InfoProvider
         // Create Events from Parameters
         EventMapper SelectEventMapper(Method method)
         {
-            var eventNameEscaped = ToSaveName(method.ParameterName);
-            var eventSchemaName = $"{aggregateName.ToLower(CultureInfo.InvariantCulture)}-{ToKebabCase(eventNameEscaped)}";
-            var eventVariableName = $"{char.ToLower(eventNameEscaped[0]) + eventNameEscaped.Substring(1)}";
-            var eventFieldName = $"_{eventVariableName}";
+            var eventNameEscaped = method.ParameterName.Replace("<", "Of").Replace(">", "");
 
             var mapperName = $"{sourceGenInfo.Aggregate.Name}{eventNameEscaped}Mapper";
             var mapperFullName = $"{sourceGenInfo.Repository.Namespace}.{mapperName}";
             var mapperNamespace = sourceGenInfo.Repository.Namespace;
-            var mapperVariableName = $"{char.ToLower(mapperName[0]) + mapperName.Substring(1)}";
-            var mapperFieldName = $"_{mapperVariableName}";
 
             return new EventMapper
             {
@@ -267,17 +337,13 @@ public static class InfoProvider
                     Name = method.ParameterName,
                     FullName = method.ParameterFullName,
                     Namespace = method.ParameterNamespace,
-                    SchemaName = eventSchemaName,
-                    VariableName = eventVariableName,
-                    FieldName = eventFieldName
+                    SchemaName = $"{sourceGenInfo.Aggregate.SaveNameForCode.ToLower()}-{ToKebabCase(eventNameEscaped)}",
                 },
                 Mapper = new Mapper
                 {
                     Name = mapperName,
                     Fullname = mapperFullName,
-                    Namespace = mapperNamespace,
-                    VariableName = mapperVariableName,
-                    FieldName = mapperFieldName
+                    Namespace = mapperNamespace
                 }
             };
         }
@@ -298,7 +364,42 @@ public static class InfoProvider
         sourceGenInfo.Aggregate.ApplyEvents = applyEventMapperInfos
             .Select(info => info.Event)
             .ToList();
+        sourceGenInfo.Aggregate.Events = sourceGenInfo.Aggregate.CreateEvents.Concat(sourceGenInfo.Aggregate.ApplyEvents).ToList();
         sourceGenInfo.EventMappers = createEventMapperInfos.Concat(applyEventMapperInfos).ToList();
+        
+        sourceGenInfo.Projector = new Projector()
+        {
+            Namespace = $"{sourceGenInfo.Repository.Namespace}",
+            Name = $"{sourceGenInfo.Aggregate.SaveNameForCode}Projector",
+            FullName = $"{sourceGenInfo.Repository.Namespace}.{sourceGenInfo.Aggregate.SaveNameForCode}Projector"
+        };
+        
+        sourceGenInfo.StateProjector = new StateProjector()
+        {
+            Namespace = $"{sourceGenInfo.Repository.Namespace}",
+            Name = $"{sourceGenInfo.Aggregate.SaveNameForCode}StateProjector",
+            FullName = $"{sourceGenInfo.Repository.Namespace}.{sourceGenInfo.Aggregate.SaveNameForCode}StateProjector",
+            Create = createStateRepository
+        };
+        
+        Projection SelectProjection(EventMapper eventMapper)
+        {
+            var projectionNamespace = $"{sourceGenInfo.Repository.Namespace}";
+            var projectionName = $"{sourceGenInfo.Aggregate.SaveNameForCode}{eventMapper.Event.SaveNameForCode}Projection";
+            var projectionFullName = $"{projectionNamespace}.{projectionName}";
+
+            return new Projection()
+            {
+                Namespace = projectionNamespace,
+                Name = projectionName,
+                FullName = projectionFullName,
+                Event = eventMapper.Event
+            };
+        }
+        
+        sourceGenInfo.Projections = sourceGenInfo.EventMappers
+            .Select(SelectProjection)
+            .ToList();
 
         return sourceGenInfo;
     }

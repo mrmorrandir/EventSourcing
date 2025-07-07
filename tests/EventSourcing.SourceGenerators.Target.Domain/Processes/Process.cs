@@ -41,4 +41,4 @@ public record Process<T>(Guid Id, string Name, string Description, T Data, Proce
 
 public record LubricantData(string Type, double Amount, double Destination);
 
-public record LubricantProcess(Guid Id, string Name, string Description, LubricantData Data, ProcessState State, ProcessResult Result) :Process<LubricantData>(Id, Name, Description, Data, State, Result);
+public record LubricantProcess(Guid Id, string Name, string Description, LubricantData Data, ProcessState State, ProcessResult Result) : Process<LubricantData>(Id, Name, Description, Data, State, Result);

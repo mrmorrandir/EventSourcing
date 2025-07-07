@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.SourceGenerators.Serialization;
+﻿namespace EventSourcing.SourceGenerators;
 
 public static class PlainTextCommentSerializer
 {

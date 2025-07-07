@@ -11,100 +11,42 @@ public class RepositoryGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var repositories = context.SyntaxProvider
+        var eventSourcingInfosProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: (s, _) => IsRepositoryCandidate(s),
-                transform: (ctx, _) => GetRepositoryInfo(ctx))
+                predicate: (s, _) => InfoProvider.IsRepositoryCandidate(s),
+                transform: (ctx, _) => InfoProvider.GetEventSourcingInfo(ctx))
             .Where(info => info is not null);
-
-        context.RegisterSourceOutput(repositories.Collect(), (spc, infos) =>
+        
+        context.RegisterSourceOutput(eventSourcingInfosProvider.Collect(), (spc, eventSourcingInfos) =>
         {
-            if (infos.IsDefaultOrEmpty)
+            if (eventSourcingInfos.IsDefaultOrEmpty)
                 return;
-
-            foreach (var info in infos)
+        
+            foreach (var eventSourcingInfo in eventSourcingInfos)
             {
-                var repositorySource = CreateRepositorySource(info!);
-                spc.AddSource($"{info!.RepositoryFullName}.g.cs", SourceText.From(repositorySource, Encoding.UTF8));
+                var repositorySource = CreateRepositorySource(eventSourcingInfo!);
+                spc.AddSource($"{eventSourcingInfo!.Repository.SaveFullNameForFiles}.g.cs", SourceText.From(repositorySource, Encoding.UTF8));
             }
-            foreach (var info in infos.Where(x => x!.CreateStateRepository))
+            foreach (var eventSourcingInfo in eventSourcingInfos.Where(esi => esi!.StateRepository.Create))
             {
-                var stateRepositorySource = CreateStateRepositorySource(info!);
-                spc.AddSource($"{info!.StateRepositoryFullName}.g.cs", SourceText.From(stateRepositorySource, Encoding.UTF8));
+                var stateRepositorySource = CreateStateRepositorySource(eventSourcingInfo!);
+                spc.AddSource($"{eventSourcingInfo!.StateRepository.SaveFullNameForFiles}.g.cs", SourceText.From(stateRepositorySource, Encoding.UTF8));
             }
             
-            var repositoryDependencyInjectionSource = CreateRepositoryDependencyInjectionSource(infos!);
+            var repositoryDependencyInjectionSource = CreateRepositoryDependencyInjectionSource(eventSourcingInfos!);
             spc.AddSource($"RepositoryDependencyInjection.g.cs", SourceText.From(repositoryDependencyInjectionSource, Encoding.UTF8));
         });
         
         // Create a source file for all the repositories together - a Dependency Injection class that registers them
-        context.RegisterSourceOutput(repositories.Collect(), (spc, infos) =>
+        context.RegisterSourceOutput(eventSourcingInfosProvider.Collect(), (spc, infos) =>
         {
             if (infos.IsDefaultOrEmpty)
                 return;
             
         });
     }
-    private static bool IsRepositoryCandidate(SyntaxNode node)
-    {
-        if (node is not ClassDeclarationSyntax classDecl)
-            return false;
-
-        // Must be partial
-        if (!classDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
-            return false;
-
-        // Must have a base list (implements or inherits)
-        if (classDecl.BaseList == null)
-            return false;
-
-        // Must implement IAggregateRepository<T>
-        return classDecl.BaseList.Types
-            .Any(t => t.Type.ToString().StartsWith("IRepository<"));
-    }
     
-    private static RepositoryInfo? GetRepositoryInfo(GeneratorSyntaxContext context)
-    {
-        var classSyntax = (ClassDeclarationSyntax)context.Node;
-        var model = context.SemanticModel;
-        var classSymbol = model.GetDeclaredSymbol(classSyntax) as INamedTypeSymbol;
-        if (classSymbol == null)
-            return null;
-
-        // Find IAggregateRepository<T>
-        var repoInterface = classSymbol.AllInterfaces
-            .FirstOrDefault(i =>
-                i.OriginalDefinition.ToDisplayString() == "EventSourcing.Repositories.IRepository<TAggregate>");
-
-        if (repoInterface == null)
-            return null;
-
-        var aggregateType = repoInterface.TypeArguments.FirstOrDefault() as INamedTypeSymbol;
-        if (aggregateType == null)
-            return null;
-        
-        // Check if the Repository has a [UseStateRepository] attribute
-        bool createStateRepository = false;
-        var useStateRepositoryAttribute = classSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.ToDisplayString() == "EventSourcing.Repositories.UseStateRepositoryAttribute");
-        if (useStateRepositoryAttribute != null)
-            createStateRepository = useStateRepositoryAttribute.ConstructorArguments.Length > 0 && useStateRepositoryAttribute.ConstructorArguments[0].Value is true;
-
-        return new RepositoryInfo
-        {
-            AggregateNamespace = aggregateType.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
-            AggregateName = aggregateType.Name,
-            AggregateFullName = aggregateType.ToDisplayString(),
-            RepositoryNamespace = classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>",""),
-            RepositoryName = classSymbol.Name,
-            RepositoryFullName = classSymbol.ToDisplayString(),
-            StateRepositoryName = $"{aggregateType.Name}StateRepository",
-            StateRepositoryNamespace = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}",
-            StateRepositoryFullName = $"{classSymbol.ContainingNamespace.ToDisplayString().Replace("<global namespace>","")}.{aggregateType.Name}StateRepository",
-            CreateStateRepository = createStateRepository
-        };
-    }
-
-    private static string CreateRepositorySource(RepositoryInfo info)
+    private static string CreateRepositorySource(InfoProvider.EventSourcingInfo eventSourcingInfo)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
@@ -115,19 +57,19 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("using EventSourcing.Stores;");
         sb.AppendLine("using EventSourcing.Mappers;");
         sb.AppendLine("using EventSourcing.Projections;");
-        if (!string.IsNullOrEmpty(info.AggregateNamespace))
-            sb.AppendLine($"using {info.AggregateNamespace};");
+        if (!string.IsNullOrEmpty(eventSourcingInfo.Aggregate.Namespace))
+            sb.AppendLine($"using {eventSourcingInfo.Aggregate.Namespace};");
         sb.AppendLine();
-        sb.AppendLine($"namespace {info.RepositoryNamespace};");
+        sb.AppendLine($"namespace {eventSourcingInfo.Repository.Namespace};");
         sb.AppendLine();
-        sb.AppendLine($"public partial class {info.RepositoryName} : Repository<{info.AggregateName}>");
+        sb.AppendLine($"public partial class {eventSourcingInfo.Repository.SaveNameForCode} : Repository<{eventSourcingInfo.Aggregate.Name}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.RepositoryName}(IEventStore eventStore, ISerializationRegistry<{info.AggregateName}> serializationRegistry, IAggregator<{info.AggregateName}> aggregator, IEnumerable<IProjector<{info.AggregateName}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
+        sb.AppendLine($"    public {eventSourcingInfo.Repository.SaveNameForCode}(IEventStore eventStore, ISerializationRegistry<{eventSourcingInfo.Aggregate.Name}> serializationRegistry, IAggregator<{eventSourcingInfo.Aggregate.Name}> aggregator, IEnumerable<IProjector<{eventSourcingInfo.Aggregate.Name}>> projectors) : base(eventStore, serializationRegistry, aggregator, projectors) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
     
-    private static string CreateStateRepositorySource(RepositoryInfo info)
+    private static string CreateStateRepositorySource(InfoProvider.EventSourcingInfo eventSourcingInfo)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
@@ -138,27 +80,27 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("using EventSourcing.Stores;");
         sb.AppendLine("using EventSourcing.Mappers;");
         sb.AppendLine("using EventSourcing.Projections;");
-        if (!string.IsNullOrEmpty(info.AggregateNamespace))
-            sb.AppendLine($"using {info.AggregateNamespace};");
+        if (!string.IsNullOrEmpty(eventSourcingInfo.Aggregate.Namespace))
+            sb.AppendLine($"using {eventSourcingInfo.Aggregate.Namespace};");
         sb.AppendLine();
-        sb.AppendLine($"namespace {info.StateRepositoryNamespace};");
+        sb.AppendLine($"namespace {eventSourcingInfo.StateRepository.Namespace};");
         sb.AppendLine();
-        sb.AppendLine($"public partial class {info.StateRepositoryName} : StateRepository<{info.AggregateName}>");
+        sb.AppendLine($"public partial class {eventSourcingInfo.StateRepository.SaveNameForCode} : StateRepository<{eventSourcingInfo.Aggregate.Name}>");
         sb.AppendLine("{");
-        sb.AppendLine($"    public {info.StateRepositoryName}(IStateStore stateStore) : base(stateStore) {{ }}");
+        sb.AppendLine($"    public {eventSourcingInfo.StateRepository.SaveNameForCode}(IStateStore stateStore) : base(stateStore) {{ }}");
         sb.AppendLine("}");
         return sb.ToString();
     }
     
-    private static string CreateRepositoryDependencyInjectionSource(ImmutableArray<RepositoryInfo> aggregateInfos)
+    private static string CreateRepositoryDependencyInjectionSource(ImmutableArray<InfoProvider.EventSourcingInfo> eventSourcingInfos)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine("using EventSourcing.Repositories;");
         
         var namespaces = new List<string>();
-        namespaces.AddRange(aggregateInfos.Where(x => !string.IsNullOrWhiteSpace(x.AggregateNamespace)).Select(x => x.AggregateNamespace));
-        namespaces.AddRange(aggregateInfos.Where(x => !string.IsNullOrWhiteSpace(x.RepositoryNamespace)).Select(x => x.RepositoryNamespace));
+        namespaces.AddRange(eventSourcingInfos.Where(x => !string.IsNullOrWhiteSpace(x.Aggregate.Namespace)).Select(x => x.Aggregate.Namespace));
+        namespaces.AddRange(eventSourcingInfos.Where(x => !string.IsNullOrWhiteSpace(x.Repository.Namespace)).Select(x => x.Repository.Namespace));
         foreach (var ns in namespaces.Distinct())
             sb.AppendLine($"using {ns};");
         
@@ -175,17 +117,17 @@ public class RepositoryGenerator : IIncrementalGenerator
         
         sb.AppendLine("    /// <list type=\"bullet\">");
         
-        foreach (var info in aggregateInfos)
+        foreach (var info in eventSourcingInfos)
         {
-            sb.AppendLine($"    /// <item>IRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
-            sb.AppendLine($"    /// <item>Repository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.RepositoryName}\"/>) and</item>");
-            sb.AppendLine($"    /// <item><see cref=\"{info.RepositoryName}\"/></item>");
+            sb.AppendLine($"    /// <item>IRepository&lt;{info.Aggregate.Name}&gt; (Implementation: <see cref=\"{info.Repository.Name}\"/>) and</item>");
+            sb.AppendLine($"    /// <item>Repository&lt;{info.Aggregate.Name}&gt; (Implementation: <see cref=\"{info.Repository.Name}\"/>) and</item>");
+            sb.AppendLine($"    /// <item><see cref=\"{info.Repository.Name}\"/></item>");
         }
-        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+        foreach (var info in eventSourcingInfos.Where(esi => esi.StateRepository.Create))
         {
-            sb.AppendLine($"    /// <item>IStateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
-            sb.AppendLine($"    /// <item>StateRepository&lt;{info.AggregateName}&gt; (Implementation: <see cref=\"{info.StateRepositoryName}\"/>) and</item>");
-            sb.AppendLine($"    /// <item><see cref=\"{info.StateRepositoryName}\"/></item>");
+            sb.AppendLine($"    /// <item>IStateRepository&lt;{info.Aggregate.Name}&gt; (Implementation: <see cref=\"{info.StateRepository.Name}\"/>) and</item>");
+            sb.AppendLine($"    /// <item>StateRepository&lt;{info.Aggregate.Name}&gt; (Implementation: <see cref=\"{info.StateRepository.Name}\"/>) and</item>");
+            sb.AppendLine($"    /// <item><see cref=\"{info.StateRepository.Name}\"/></item>");
         }
 
         sb.AppendLine("    /// </list>");
@@ -195,57 +137,43 @@ public class RepositoryGenerator : IIncrementalGenerator
         sb.AppendLine("    public static void AddRepositories(this IServiceCollection services)");
         sb.AppendLine("    {");
 
-        foreach (var info in aggregateInfos)
-            sb.AppendLine($"        services.Add{info.RepositoryName}();");
-        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
-            sb.AppendLine($"        services.Add{info.StateRepositoryName}();");
+        foreach (var info in eventSourcingInfos)
+            sb.AppendLine($"        services.Add{info.Repository.Name}();");
+        foreach (var info in eventSourcingInfos.Where(esi => esi.StateRepository.Create))
+            sb.AppendLine($"        services.Add{info.StateRepository.Name}();");
 
         sb.AppendLine("    }");
 
-        foreach (var info in aggregateInfos)
+        foreach (var info in eventSourcingInfos)
         {
             sb.AppendLine("    /// <summary>");
-            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.RepositoryName}\"/> in the service collection.</para>");
+            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.Repository.Name}\"/> in the service collection.</para>");
             sb.AppendLine("    /// <para>To register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
             sb.AppendLine("    /// </summary>");
-            sb.AppendLine($"    public static void Add{info.RepositoryName}(this IServiceCollection services)");
+            sb.AppendLine($"    public static void Add{info.Repository.Name}(this IServiceCollection services)");
             sb.AppendLine("    {");
-            sb.AppendLine($"        services.AddScoped<{info.RepositoryName}>();");
-            sb.AppendLine($"        services.AddScoped<Repository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
-            sb.AppendLine($"        services.AddScoped<IRepository<{info.AggregateName}>, {info.RepositoryName}>(sp => sp.GetRequiredService<{info.RepositoryName}>());");
+            sb.AppendLine($"        services.AddScoped<{info.Repository.Name}>();");
+            sb.AppendLine($"        services.AddScoped<Repository<{info.Aggregate.Name}>, {info.Repository.Name}>(sp => sp.GetRequiredService<{info.Repository.Name}>());");
+            sb.AppendLine($"        services.AddScoped<IRepository<{info.Aggregate.Name}>, {info.Repository.Name}>(sp => sp.GetRequiredService<{info.Repository.Name}>());");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
-        foreach (var info in aggregateInfos.Where(x => x.CreateStateRepository))
+        foreach (var info in eventSourcingInfos.Where(esi => esi.StateRepository.Create))
         {
             sb.AppendLine("    /// <summary>");
-            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.StateRepositoryName}\"/> in the service collection.</para>");
+            sb.AppendLine($"    /// <para>Registers the <see cref=\"{info.StateRepository.Name}\"/> in the service collection.</para>");
             sb.AppendLine("    /// <para>To register all repositories use the <see cref=\"AddRepositories\"/> method.</para>");
             sb.AppendLine("    /// </summary>");
-            sb.AppendLine($"    public static void Add{info.StateRepositoryName}(this IServiceCollection services)");
+            sb.AppendLine($"    public static void Add{info.StateRepository.Name}(this IServiceCollection services)");
             sb.AppendLine("    {");
-            sb.AppendLine($"        services.AddScoped<{info.StateRepositoryName}>();");
-            sb.AppendLine($"        services.AddScoped<StateRepository<{info.AggregateName}>, {info.StateRepositoryName}>(sp => sp.GetRequiredService<{info.StateRepositoryName}>());");
-            sb.AppendLine($"        services.AddScoped<IStateRepository<{info.AggregateName}>, {info.StateRepositoryName}>(sp => sp.GetRequiredService<{info.StateRepositoryName}>());");
+            sb.AppendLine($"        services.AddScoped<{info.StateRepository.Name}>();");
+            sb.AppendLine($"        services.AddScoped<StateRepository<{info.Aggregate.Name}>, {info.StateRepository.Name}>(sp => sp.GetRequiredService<{info.StateRepository.Name}>());");
+            sb.AppendLine($"        services.AddScoped<IStateRepository<{info.Aggregate.Name}>, {info.StateRepository.Name}>(sp => sp.GetRequiredService<{info.StateRepository.Name}>());");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
         sb.AppendLine("}");
         
         return sb.ToString();
-    }
-
-    private class RepositoryInfo 
-    {
-        public string AggregateNamespace = "";
-        public string AggregateName = "";
-        public string AggregateFullName = "";
-        public string RepositoryNamespace = "";
-        public string RepositoryName = "";
-        public string RepositoryFullName = "";
-        public string StateRepositoryName = "";
-        public string StateRepositoryNamespace = "";
-        public string StateRepositoryFullName = "";
-        public bool CreateStateRepository = false;
     }
 }
