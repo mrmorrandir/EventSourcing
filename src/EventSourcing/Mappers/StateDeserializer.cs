@@ -6,6 +6,11 @@ public class StateDeserializer<TAggregate> : IStateDeserializer<TAggregate> wher
 {
     public string Type { get; } = ToKebabCase(typeof(TAggregate).Name);
 
+    public StateDeserializer(string? aggregateName = null)
+    {
+        if (!string.IsNullOrWhiteSpace(aggregateName))
+            Type = aggregateName;
+    }
     public TAggregate Deserialize(string data)
     {
         try

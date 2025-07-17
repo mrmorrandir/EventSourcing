@@ -6,6 +6,12 @@ public class StateSerializer<TAggregate> : IStateSerializer<TAggregate> where TA
 {
     public string Type { get; } = ToKebabCase(typeof(TAggregate).Name);
 
+    public StateSerializer(string? aggregateName = null)
+    {
+        if (!string.IsNullOrEmpty(aggregateName))
+            Type = aggregateName;
+    }
+
     public ISerializedState Serialize(TAggregate state)
     {
         try
