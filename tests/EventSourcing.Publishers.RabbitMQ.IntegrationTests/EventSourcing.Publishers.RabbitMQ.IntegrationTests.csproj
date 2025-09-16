@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="AwesomeAssertions" Version="8.2.0"/>
-        <PackageReference Include="FluentResults" Version="3.16.0"/>
+        <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5"/>

@@ -8,7 +8,7 @@
         
         <Title>EventSourcing.Abstractions</Title>
         <Authors>Andreas Naumann</Authors>
-        <Version>2.0.0-preview-20250717.1</Version>
+        <Version>2.0.0-preview-20250916.1</Version>
         <Copyright>2025 @ Andreas Naumann</Copyright>
         <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
@@ -26,7 +26,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentResults" Version="3.16.0"/>
+        <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5"/>
     </ItemGroup>
 
