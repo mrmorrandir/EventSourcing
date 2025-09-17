@@ -12,38 +12,38 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventSourcing.Migrations
 {
     [DbContext(typeof(EventStoreDbContext))]
-    [Migration("20230206105220_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250917061822_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.2")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("EventSourcing.Stores.EventData", b =>
+            modelBuilder.Entity("EventSourcing.Stores.EventEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("StreamId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Type")
+                    b.Property<string>("Schema")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StreamId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Version")
                         .HasColumnType("int");
@@ -58,6 +58,28 @@ namespace EventSourcing.Migrations
                         .IsUnique();
 
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("EventSourcing.Stores.StateEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Schema")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("States");
                 });
 #pragma warning restore 612, 618
         }

@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         
-        <Version>2.0.0-preview-20250917.1</Version>
+        <Version>2.0.0-preview-20250917.2</Version>
         <Title>EventSourcing.Publishers</Title>
         <Authors>Andreas Naumann</Authors>
         <Description>Extend the event sourcing system with publishers like Mqtt or RabbitMQ</Description>
