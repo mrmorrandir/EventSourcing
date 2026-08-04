@@ -62,11 +62,11 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
             .First();
         
         // Arrange RabbitMQ Test Connection
-        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync();
-        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync();
-        await rabbitMqChannel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, null);
-        await rabbitMqChannel.QueueDeclareAsync(queueName, false, false, true, null);
-        await rabbitMqChannel.QueueBindAsync(queueName, exchangeName, "#", null);
+        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync(TestContext.Current.CancellationToken);
+        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync(cancellationToken:TestContext.Current.CancellationToken);
+        await rabbitMqChannel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, null, cancellationToken:TestContext.Current.CancellationToken);
+        await rabbitMqChannel.QueueDeclareAsync(queueName, false, false, true, null, cancellationToken:TestContext.Current.CancellationToken);
+        await rabbitMqChannel.QueueBindAsync(queueName, exchangeName, "#", null, cancellationToken:TestContext.Current.CancellationToken);
         var rabbitMqConsumer = new AsyncEventingBasicConsumer(rabbitMqChannel);
         var receivedEventDeserializationResults = new List<Result<IEvent>>();
         rabbitMqConsumer.ReceivedAsync += (sender, eventArgs) =>
@@ -77,17 +77,17 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
             receivedEventDeserializationResults.Add(deserializeResult);            
             return Task.CompletedTask;
         };
-        await rabbitMqChannel.BasicConsumeAsync(queueName, true, rabbitMqConsumer);
+        await rabbitMqChannel.BasicConsumeAsync(queueName, true, rabbitMqConsumer, cancellationToken:TestContext.Current.CancellationToken);
         
         // Arrange Aggregate and Event
         var testAggregateCreatedEvent = new CreatedEvent(Guid.NewGuid(), "Test Name", "Test Description");
         var testAggregate = TestAggregate.Create(testAggregateCreatedEvent);
 
         // Act
-        var projectResult = await rabbitMqEventPublisher.ProjectAsync(testAggregate, testAggregateCreatedEvent);
+        var projectResult = await rabbitMqEventPublisher.ProjectAsync(testAggregate, testAggregateCreatedEvent, cancellationToken:TestContext.Current.CancellationToken);
         
         // Assert
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         projectResult.IsSuccess.Should().BeTrue($"because the event should be published successfully (without errors like {projectResult.Errors.FirstOrDefault()?.Message})");
         receivedEventDeserializationResults.Should().NotBeEmpty("because we should receive the event in RabbitMQ");
         receivedEventDeserializationResults.Count.Should().Be(1, "because we published only one event");
@@ -110,11 +110,11 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
         
         // Arrange RabbitMQ Test Connection
         var rabbitMqConnectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
-        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync();
-        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync();
+        await using var rabbitMqConnection = await rabbitMqConnectionFactory.CreateConnectionAsync(TestContext.Current.CancellationToken);
+        await using var rabbitMqChannel = await rabbitMqConnection.CreateChannelAsync(cancellationToken:TestContext.Current.CancellationToken);
         
         // Act
-        var func = async () => await rabbitMqChannel.ExchangeDeclarePassiveAsync(exchangeName);
+        var func = async () => await rabbitMqChannel.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken:TestContext.Current.CancellationToken);
 
         // Assert
         await func.Should().NotThrowAsync("because the exchange should be registered on startup when UseRabbitMqPublishing is called");
@@ -130,11 +130,11 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
         
         // Arrange RabbitMQ Test Connection
         var connectionFactory = serviceProvider.GetRequiredService<IConnectionFactory>();
-        await using var connection = await connectionFactory.CreateConnectionAsync();
-        await using var channel = await connection.CreateChannelAsync();
+        await using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken:TestContext.Current.CancellationToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken:TestContext.Current.CancellationToken);
 
         // Act
-        var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName);
+        var func = async () => await channel.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken:TestContext.Current.CancellationToken);
 
         // Assert
         await func.Should().ThrowAsync<OperationInterruptedException>("because the exchange should not exist if UseRabbitMqPublishing is not called");
