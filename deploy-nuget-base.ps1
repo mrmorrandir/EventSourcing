@@ -42,17 +42,17 @@ function Get-PackageNameFromProject {
 function Get-VersionFromProject {
     param([string]$ProjectPath)
 
-    [xml]$projectXml = Get-Content -Raw -Path $ProjectPath
+    # Use dotnet msbuild to resolve the Version property, including inheritance
+    # from Directory.Build.props and any other imported props files.
+    $raw = dotnet msbuild $ProjectPath -nologo --getProperty:Version 2>$null
+    $version = $raw.Trim()
 
-    $node = $projectXml.SelectSingleNode("//PropertyGroup/Version")
-
-    if ($null -eq $node -or [string]::IsNullOrWhiteSpace($node.InnerText)) {
-        Write-ColorOutput "❌ ERROR: No <Version> found in .csproj file" "Red"
-        Write-ColorOutput "   Add <Version>1.0.0</Version> to your .csproj" "Yellow"
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Write-ColorOutput "❌ ERROR: Unable to resolve version for project" "Red"
+        Write-ColorOutput "   Ensure a <Version> property is set in .csproj or Directory.Build.props" "Yellow"
         exit 1
     }
 
-    $version = $node.InnerText.Trim()
     return $version
 }
 
