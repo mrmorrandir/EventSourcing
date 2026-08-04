@@ -189,7 +189,7 @@ public static class InfoProvider
         public string SaveFullNameForFiles => $"{SaveNamespaceForFiles}.{SaveNameForFiles}";
         public string VariableName => $"{char.ToLower(SaveNameForCode[0]) + SaveNameForCode.Substring(1)}";
         public string FieldName => $"_{VariableName}";
-        public Event Event { get; set; }
+        public Event Event { get; set; } = new();
 
         public override string ToString() => $"Namespace: {Namespace}\n" +
                                              $"Name: {Name}\n" +

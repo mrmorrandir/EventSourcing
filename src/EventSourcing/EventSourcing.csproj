@@ -6,23 +6,16 @@
         <Nullable>enable</Nullable>
         <LangVersion>default</LangVersion>
         
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>EventSourcing</Title>
-        <Authors>Andreas Naumann</Authors>
-        <Version>2.0.0-preview-20250917.2</Version>
         <Description>A small EventSourcing Framework Package.
 
             The persistance is based on the EntityFramworkCore and can be configured via DependencyInjection
         </Description>
-        <Copyright>2025 @ Andreas Naumann</Copyright>
-        <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
-        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-        <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageTags>EventSourcing, Events, EventStore</PackageTags>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <PackageReleaseNotes>Initial stable 2.0.0 release with core abstractions, runtime integration, source-generator support, projections and publisher extensibility.</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <UserSecretsId>46b3d3cd-e37b-495e-9c07-9b11ad3d095d</UserSecretsId>
+        <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+        <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,8 +23,7 @@
     </ItemGroup>
     
     <PropertyGroup>
-        <!--This is for symbols in the NuGet package-->
-        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>.dll;.pdb;.xml</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
     
 
@@ -43,16 +35,14 @@
         <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
             <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
-        <PackageReference Include="System.Text.Json" Version="9.0.9" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.18" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.10" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+        <PackageReference Include="System.Text.Json" Version="10.0.10" />
     </ItemGroup>
 
     <ItemGroup>

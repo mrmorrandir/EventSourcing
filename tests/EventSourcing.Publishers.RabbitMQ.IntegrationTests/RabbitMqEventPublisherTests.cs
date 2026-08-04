@@ -21,7 +21,7 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
     /// <summary>
     /// Sets up the RabbitMQ container for testing.
     /// </summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _rabbitMqContainer = new RabbitMqBuilder()
             .WithImage("rabbitmq:4.1-management")
@@ -37,7 +37,7 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
     /// <summary>
     /// Cleans up the RabbitMQ container after tests are completed.
     /// </summary>
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_rabbitMqContainer != null)
             await _rabbitMqContainer.DisposeAsync();

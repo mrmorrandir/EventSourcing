@@ -1,12 +1,12 @@
-# EventSourcing
+# EventSourcing.SourceGenerators
 
-A small EventSourcing framework for .NET applications.
+Compile-time generators, analyzers and code fixes for the EventSourcing
+framework.
 
-The runtime stores events with Entity Framework Core, rebuilds aggregate state
-from event streams and executes projections after successful writes. It is
-designed to be used together with `EventSourcing.SourceGenerators`, which
-generates repositories, mappers, registries, aggregators, projectors and
-dependency injection extensions at compile time.
+Install this package in infrastructure projects that declare partial
+repositories. The package generates repository implementations, event mappers,
+serialization registries, aggregators, projectors and dependency injection
+extensions.
 
 ## Installation
 
@@ -15,9 +15,8 @@ dependency injection extensions at compile time.
 <PackageReference Include="EventSourcing.SourceGenerators" Version="2.0.0" PrivateAssets="all" />
 ```
 
-Use `EventSourcing.Abstractions` instead of `EventSourcing` in pure domain
-projects when they only need contracts such as `IAggregate`, `IEvent` and
-`[UseStateRepository]`.
+`EventSourcing.SourceGenerators` is a compile-time package. It is delivered as
+an analyzer asset and does not add runtime assemblies to your application.
 
 ## Tutorial
 
@@ -59,8 +58,7 @@ public sealed record Order(
 }
 ```
 
-Create a partial repository in an infrastructure project. The source generator
-will implement the required runtime behavior.
+Create a partial repository in your infrastructure project.
 
 ```csharp
 using EventSourcing.Repositories;
@@ -73,6 +71,9 @@ public partial class OrderRepository : IRepository<Order>
 {
 }
 ```
+
+Build the project. The generators create the implementation and registration
+code for the repository, mapper registry, aggregator and projectors.
 
 Implement the generated projections. The generator creates one partial
 projection class per event type, but the projection logic must be provided by
@@ -106,7 +107,7 @@ public partial class OrderOrderCreatedEventProjection
 }
 ```
 
-Register the generated EventSourcing services.
+Register the generated services.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -117,15 +118,7 @@ builder.Services.AddEventSourcing(options =>
 });
 ```
 
-Initialize the database during application startup.
-
-```csharp
-var app = builder.Build();
-
-app.Services.UseEventSourcing();
-```
-
-Use `IRepository<TAggregate>` from application code.
+Use the repository from application code.
 
 ```csharp
 using EventSourcing.Repositories;
@@ -157,34 +150,22 @@ public sealed class CreateOrderHandler
 }
 ```
 
-Update an aggregate by returning one or more events.
+## Generated APIs
 
-```csharp
-public async Task<Result> RenameAsync(Guid orderId, string orderNumber, CancellationToken cancellationToken)
-{
-    var result = await _repository.UpdateAsync(
-        orderId,
-        order => new OrderRenamedEvent(order.Id, orderNumber, DateTimeOffset.UtcNow),
-        cancellationToken);
+For every valid repository, the package can generate:
 
-    return result.ToResult();
-}
-```
-
-## Generated components
-
-`EventSourcing.SourceGenerators` reads partial `IRepository<TAggregate>`
-implementations and generates:
-
-- repository implementations
+- a concrete repository implementation
+- an optional state repository
 - event mappers
-- serialization registries
-- aggregators
-- projections and projectors
-- dependency injection extensions
+- an `ISerializationRegistry<TAggregate>` implementation
+- an `IAggregator<TAggregate>` implementation
+- projection classes and projectors
+- `AddEventSourcing`, `AddRepositories`, `AddSerialization`, `AddAggregators`
+  and `AddProjectors`
 
-The generated `AddEventSourcing` method wires these pieces together with the
-runtime `EventStore`, `StateStore` and `EventStoreDbContext`.
+The bundled analyzers warn when repository classes are not partial, do not
+follow the expected repository naming convention or generated projections still
+need a `ProjectAsync` override.
 
 ## Projections
 
@@ -196,17 +177,3 @@ The source generator creates the base partial projection classes for each event
 type. You must extend these partial classes and override `ProjectAsync` to
 provide the projection logic. If you do not override `ProjectAsync`, the
 default implementation returns a failed `Result`.
-
-## State repository support
-
-Add `[UseStateRepository(true)]` to a repository when the current aggregate
-state should be stored beside the event stream.
-
-```csharp
-[UseStateRepository(true)]
-public partial class OrderRepository : IRepository<Order>
-{
-}
-```
-
-The generator creates a state repository and state projector for the aggregate.
