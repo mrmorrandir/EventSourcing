@@ -1,0 +1,16 @@
+﻿using EventSourcing.Mappers;
+using EventSourcing.SourceGenerators.Target.Domain.MyTests.Events;
+
+namespace EventSourcing.SourceGenerators.Target.TestEnvironment;
+
+public partial class DeletedEventMapper : AbstractEventMapper<DeletedEvent>
+{
+    public DeletedEventMapper()
+    {
+        WillSerialize("deleted-event-v1");
+        CanDeserialize("deleted-event-v1");
+        Configure();
+    }
+
+    partial void Configure();
+}

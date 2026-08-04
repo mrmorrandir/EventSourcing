@@ -2,7 +2,7 @@
 
 public interface IEventMapper
 {
-    IEnumerable<string> Types { get; }
+    IEnumerable<string> Schemas { get; }
     Type EventType { get; }
 }
 
@@ -10,5 +10,5 @@ public interface IEventMapper<TEvent> : IEventMapper where TEvent: IEvent
 {
     ISerializedEvent Serialize(TEvent @event);
     
-    TEvent Deserialize(string type, string data);
+    TEvent Deserialize(string schema, string data);
 }

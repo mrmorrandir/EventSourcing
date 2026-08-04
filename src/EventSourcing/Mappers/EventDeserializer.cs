@@ -15,8 +15,8 @@ public class EventDeserializer<TEvent> : IEventDeserializer<TEvent> where TEvent
         try
         {
             if (_deserializerFunc is not null) 
-                return _deserializerFunc(data, EventSerializerOptions.Default);
-            return JsonSerializer.Deserialize<TEvent>(data, EventSerializerOptions.Default)!;
+                return _deserializerFunc(data, EventSourcingSerializerOptions.Default);
+            return JsonSerializer.Deserialize<TEvent>(data, EventSourcingSerializerOptions.Default)!;
         }
         catch (Exception e)
         {

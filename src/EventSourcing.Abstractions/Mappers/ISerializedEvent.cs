@@ -2,6 +2,6 @@ namespace EventSourcing.Mappers;
 
 public interface ISerializedEvent
 {
-    string Type { get; }
+    string Schema { get; }
     string Data { get; }
 }

@@ -14,16 +14,16 @@ public class EventSerializer<TEvent> : IEventSerializer<TEvent> where TEvent : I
     {
         try
         {
-            var data = JsonSerializer.Serialize(@event, EventSerializerOptions.Default);
+            var data = JsonSerializer.Serialize(@event, EventSourcingSerializerOptions.Default);
             return new SerializedEvent
             {
-                Type = Type,
+                Schema = Type,
                 Data = data
             };
         }
         catch (Exception e)
         {
-            throw new EventSerializerException($"Failed to serialize event of type {typeof(TEvent).Name} to data", e);
+            throw new EventSourcingSerializerException($"Failed to serialize event of type {typeof(TEvent).Name} to data", e);
         }
     }
 }

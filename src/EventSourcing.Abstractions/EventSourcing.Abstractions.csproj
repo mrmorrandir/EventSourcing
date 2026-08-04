@@ -4,23 +4,28 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.0.0-beta-2</Version>
+        <LangVersion>default</LangVersion>
+        
         <Title>EventSourcing.Abstractions</Title>
-        <Authors>Andreas Naumann</Authors>
-        <Copyright>2025 @ Andreas Naumann</Copyright>
-        <PackageProjectUrl>https://github.com/mrmorrandir/EventSourcing</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/mrmorrandir/EventSourcing/blob/main/LICENSE.txt</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/mrmorrandir/EventSourcing</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageTags>EventSourcing, Events, EventStore</PackageTags>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>1.0.0</PackageVersion>
-        <PackageReleaseNotes></PackageReleaseNotes>
+        <Description>Contracts, marker attributes and shared abstractions for EventSourcing.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReleaseNotes>Initial stable 2.0.0 release with core abstractions, runtime integration, source-generator support, projections and publisher extensibility.</PackageReleaseNotes>
         <RootNamespace>EventSourcing</RootNamespace>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!--This is for symbols in the NuGet package-->
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+
     <ItemGroup>
-      <PackageReference Include="FluentResults" Version="3.16.0" />
+        <PackageReference Include="FluentResults" Version="4.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.18" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
     </ItemGroup>
 
 </Project>
