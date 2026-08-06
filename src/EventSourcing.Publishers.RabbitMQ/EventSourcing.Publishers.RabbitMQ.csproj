@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Title>EventSourcing.Publishers.RabbitMQ</Title>
@@ -17,8 +17,8 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
-        <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301" PrivateAssets="All" />
+        <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
         <PackageReference Include="EventSourcing" Version="$(Version)" Condition="'$(_IsPacking)' == 'true'"/>
         <PackageReference Include="EventSourcing.Publishers" Version="$(Version)" Condition="'$(_IsPacking)' == 'true'"/>
     </ItemGroup>

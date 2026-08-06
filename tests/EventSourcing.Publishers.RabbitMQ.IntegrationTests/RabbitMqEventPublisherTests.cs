@@ -23,13 +23,12 @@ public class RabbitMqEventPublisherTests : IAsyncLifetime
     /// </summary>
     public async ValueTask InitializeAsync()
     {
-        _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:4.1-management")
+        _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:4.1-management")
             .WithUsername("guest")
             .WithPassword("guest")
             .WithHostname("localhost")
             .WithPortBinding(5672, 5672) // RabbitMQ default port
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5672))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(5672))
             .Build();
         await _rabbitMqContainer.StartAsync();
     }
