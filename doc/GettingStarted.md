@@ -272,14 +272,11 @@ Register EventSourcing in the application startup. The generated
 projectors, stores and EF Core infrastructure.
 
 ```csharp
-using Microsoft.EntityFrameworkCore;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEventSourcing(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("EventStore"));
+    options.ConnectionString = builder.Configuration.GetConnectionString("EventStore");
 });
 ```
 
@@ -287,13 +284,19 @@ For local development and tests, the runtime can use an in-memory EF Core
 database.
 
 ```csharp
-using Microsoft.EntityFrameworkCore.Diagnostics;
+builder.Services.AddEventSourcing();
+```
 
-builder.Services.AddEventSourcing(options =>
+When the DbContext configuration needs services from the container, use the
+service-provider overload.
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+builder.Services.AddEventSourcing((serviceProvider, options) =>
 {
-    options
-        .UseInMemoryDatabase("EventStore")
-        .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    options.UseSqlServer(configuration.GetConnectionString("EventStore"));
 });
 ```
 

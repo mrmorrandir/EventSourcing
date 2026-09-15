@@ -18,11 +18,9 @@ RabbitMQ as part of the repository projection pipeline.
 Register the EventSourcing runtime and RabbitMQ publishing services.
 
 ```csharp
-using Microsoft.EntityFrameworkCore;
-
 builder.Services.AddEventSourcing(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EventStore"));
+    options.ConnectionString = builder.Configuration.GetConnectionString("EventStore");
 });
 
 builder.Services.AddRabbitMqPublishing(options =>
