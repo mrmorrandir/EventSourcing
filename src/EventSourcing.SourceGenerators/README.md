@@ -110,11 +110,9 @@ public partial class OrderOrderCreatedEventProjection
 Register the generated services.
 
 ```csharp
-using Microsoft.EntityFrameworkCore;
-
 builder.Services.AddEventSourcing(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EventStore"));
+    options.ConnectionString = builder.Configuration.GetConnectionString("EventStore");
 });
 ```
 

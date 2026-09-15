@@ -109,11 +109,22 @@ public partial class OrderOrderCreatedEventProjection
 Register the generated EventSourcing services.
 
 ```csharp
-using Microsoft.EntityFrameworkCore;
-
 builder.Services.AddEventSourcing(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EventStore"));
+    options.ConnectionString = builder.Configuration.GetConnectionString("EventStore");
+});
+```
+
+For database configuration that depends on registered services, use the
+service-provider overload.
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+builder.Services.AddEventSourcing((serviceProvider, options) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    options.UseSqlServer(configuration.GetConnectionString("EventStore"));
 });
 ```
 

@@ -8,9 +8,20 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEventSourcing(options => options
-    .UseInMemoryDatabase("MyTestDatabase")
-    .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+builder.Services.AddEventSourcing((serviceProvider, options) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("EventStore");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        options.UseInMemoryDatabase("MyTestDatabase")
+            .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+        return;
+    }
+
+    options.UseSqlServer(connectionString);
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
